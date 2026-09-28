@@ -9,7 +9,8 @@
 <link rel="alternate" hreflang="en" href="https://markgone.kuige.me/?lang=en">
 <link rel="alternate" hreflang="zh" href="https://markgone.kuige.me/?lang=zh">
 <link rel="alternate" hreflang="x-default" href="https://markgone.kuige.me/">
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="MarkGone">
 <meta property="og:title" content="MarkGone — Free Online Watermark Remover">
@@ -36,21 +37,21 @@
 </script>
 <style>
 :root{
-  --bg:#F4F9FB; --panel:#FFFFFF; --panel2:#E9F2F6; --text:#14283A; --muted:#5B7186;
-  --line:#D6E3EA; --accent:#0E7C94; --accent2:#3FB6C9; --soft:rgba(63,182,201,.13);
-  --danger:#B3402F; --ok:#2E8B57; --shadow:0 12px 32px rgba(16,48,70,.10);
+  --bg:#f6f7fb; --panel:#ffffff; --panel2:#f2f3fa; --text:#181a26; --muted:#5d6274;
+  --line:#dfe2ee; --accent:#5b5bd6; --accent2:#8b5bd6; --soft:#eeeefc;
+  --danger:#c2334d; --ok:#0f8a4d; --shadow:0 1px 2px rgba(20,22,40,.05),0 8px 24px rgba(20,22,40,.07);
   --mask:rgba(255,59,92,.5);
 }
 [data-theme="dark"]{
-  --bg:#0A1522; --panel:#0F1D30; --panel2:#13253E; --text:#DCE9F2; --muted:#7E93A8;
-  --line:#1D3450; --accent:#3FB6C9; --accent2:#56C8DA; --soft:rgba(63,182,201,.16);
-  --danger:#E06552; --ok:#5BBE7E; --shadow:0 12px 32px rgba(0,0,0,.45);
+  --bg:#0f1118; --panel:#191d2b; --panel2:#202437; --text:#e8eaf4; --muted:#9aa0b8;
+  --line:#2a2f45; --accent:#8686f0; --accent2:#b07df0; --soft:#23244a;
+  --danger:#fb7185; --ok:#4ade80; --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.45);
 }
 @media (prefers-color-scheme: dark){
   [data-theme="auto"]{
-    --bg:#0A1522; --panel:#0F1D30; --panel2:#13253E; --text:#DCE9F2; --muted:#7E93A8;
-    --line:#1D3450; --accent:#3FB6C9; --accent2:#56C8DA; --soft:rgba(63,182,201,.16);
-    --danger:#E06552; --ok:#5BBE7E; --shadow:0 12px 32px rgba(0,0,0,.45);
+    --bg:#0f1118; --panel:#191d2b; --panel2:#202437; --text:#e8eaf4; --muted:#9aa0b8;
+    --line:#2a2f45; --accent:#8686f0; --accent2:#b07df0; --soft:#23244a;
+    --danger:#fb7185; --ok:#4ade80; --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.45);
   }
 }
 *{box-sizing:border-box}
@@ -62,7 +63,8 @@ main{max-width:1180px;margin:0 auto;padding:0 20px}
 header{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);background:color-mix(in srgb,var(--bg) 82%,transparent);border-bottom:1px solid var(--line)}
 .hdr-in{max-width:1180px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:12px}
 .logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:17px}
-.logo svg{width:26px;height:26px;border-radius:50%;box-shadow:0 0 0 1px var(--line)}
+.logoRing{width:30px;height:30px;border-radius:50%;padding:2px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:inline-flex;flex:none}
+.logoRing img{width:100%;height:100%;border-radius:50%;display:block}
 .logo .tag{font-size:12px;color:var(--muted);font-weight:500;margin-left:2px}
 .hdr-actions{margin-left:auto;display:flex;gap:8px}
 .chipbtn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:5px 13px;font-size:13px;cursor:pointer}
@@ -72,6 +74,20 @@ h1{font-size:clamp(26px,4.6vw,40px);line-height:1.2;margin:0 0 12px;letter-spaci
 .sub{color:var(--muted);font-size:16px;max-width:640px;margin:0 auto 18px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .chips span{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 13px;font-size:13px;color:var(--muted)}
+.proof{max-width:760px;margin:24px auto 0;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;box-shadow:var(--shadow)}
+.proof canvas{width:100%;display:block;border-radius:10px}
+.proofTags{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);padding:8px 4px 0}
+#steps{list-style:none;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:2px 0 12px;padding:0}
+#steps li{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 16px;font-size:13.5px;color:var(--muted)}
+#steps li b{width:20px;height:20px;border-radius:50%;background:var(--panel2);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:none}
+#steps li.on{border-color:var(--accent);color:var(--text)}
+#steps li.on b{background:var(--accent);color:#fff}
+#steps li.done b{background:var(--ok);color:#fff}
+#nextBar{display:flex;gap:12px;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:10px 16px;margin:0 0 14px;flex-wrap:wrap}
+#nextBar[hidden]{display:none}
+#nextTxt{font-size:14px}
+@keyframes mgPulse{0%,100%{box-shadow:0 0 0 0 rgba(134,134,240,.45)}50%{box-shadow:0 0 0 10px rgba(134,134,240,0)}}
+.pulse{animation:mgPulse 1.6s infinite}
 #dropZone{margin:26px 0 14px;border:2px dashed var(--line);border-radius:16px;background:var(--panel);padding:38px 20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
 #dropZone:hover,#dropZone.over{border-color:var(--accent);background:var(--soft)}
 #dropZone p{margin:0 0 12px;color:var(--muted)}
@@ -160,7 +176,7 @@ footer .code{margin-top:8px;font-size:12.5px;opacity:.85}
 <body>
 <header><div class="hdr-in">
   <div class="logo">
-    <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#0B1626"/><path d="M32 11 a21 21 0 1 1 -14.8 35.9" stroke="#3FB6C9" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M32 22 a10 10 0 1 1 -7 17" stroke="#8FE0EE" stroke-width="4.5" fill="none" stroke-linecap="round"/><circle cx="29.5" cy="29.5" r="3.2" fill="#EAF9FD"/></svg>
+    <span class="logoRing"><img src="logo.png" alt="" width="30" height="30"></span>
     <b>MarkGone</b><span class="tag" data-i18n="navTag">Free · Local · Batch</span>
   </div>
   <div class="hdr-actions">
@@ -171,13 +187,14 @@ footer .code{margin-top:8px;font-size:12.5px;opacity:.85}
 <main>
   <section class="hero">
     <h1 data-i18n="h1">Free Online Watermark Remover</h1>
-    <p class="sub" data-i18n="sub">Mark the watermark, and the inpainting engine rebuilds the background — batch processing with up to 50 parallel tasks. Your images never leave your device.</p>
+    <p class="sub" data-i18n="sub">Brush over any watermark and watch it vanish — the engine rebuilds the background behind it. Batch up to 50 images in parallel, free, no sign-up, and your photos never leave your device.</p>
     <div class="chips">
       <span data-i18n="b1">🔒 100% local — no upload</span>
       <span data-i18n="b2">⚡ Up to 50 parallel tasks</span>
       <span data-i18n="b3">🆓 Free, no signup</span>
       <span data-i18n="b4">📦 Batch + ZIP download</span>
     </div>
+    <div class="proof"><canvas id="proofCv" width="1080" height="420"></canvas><div class="proofTags"><span data-i18n="pBefore">◀ Before</span><span data-i18n="pAfter">After ▶</span></div></div>
   </section>
 
   <section id="dropZone">
@@ -186,6 +203,13 @@ footer .code{margin-top:8px;font-size:12.5px;opacity:.85}
     <button id="demoBtn" class="btn" data-i18n="demoBtn">🎲 Try with demo images</button>
     <input type="file" id="fileIn" multiple accept="image/*" hidden>
   </section>
+
+  <ol id="steps">
+    <li id="st1"><b>1</b><span data-i18n="st1">Add images</span></li>
+    <li id="st2"><b>2</b><span data-i18n="st2">Mark the watermark</span></li>
+    <li id="st3"><b>3</b><span data-i18n="st3">Process &amp; download</span></li>
+  </ol>
+  <div id="nextBar" hidden><span id="nextTxt"></span><button class="btn primary" id="nextBtn"></button></div>
 
   <section id="controls" hidden>
     <div class="crow">
@@ -250,7 +274,7 @@ footer .code{margin-top:8px;font-size:12.5px;opacity:.85}
 </main>
 <footer>
   <div>MarkGone · a free tool from <a href="https://kuige.me/" target="_blank" rel="noopener">kuige.me</a> · images stay on your device</div>
-  <div class="code" data-i18n="footCode">Codename · 归墟 Guixu — 八纮九野之水，天汉之流，莫不注之；水印没入归墟，一去不返。All waters drain into the abyss of Guixu — watermarks included.</div>
+  <div class="code" data-i18n="footCode">Codename · 归墟灵蛟 — 灵蛟举漩涡之盘镇于归墟；八纮九野之水莫不注之，水印没入，一去不返。The dragon-spirit holds the vortex disc over the abyss where all waters return — watermarks included.</div>
 </footer>
 
 <div id="editor">
@@ -565,6 +589,7 @@ self.onmessage=function(e){
 <script type="module">
 const $=id=>document.getElementById(id);
 const dpr=Math.min(2,window.devicePixelRatio||1);
+let uiReady=false;
 
 /* ================= i18n ================= */
 const T_EN_TITLE='MarkGone — Free Online Watermark Remover | Batch & Local';
@@ -573,7 +598,7 @@ const D={
 en:{
   navTag:'Free · Local · Batch',
   h1:'Free Online Watermark Remover',
-  sub:'Mark the watermark, and the inpainting engine rebuilds the background — batch processing with up to 50 parallel tasks. Your images never leave your device.',
+  sub:'Brush over any watermark and watch it vanish — the engine rebuilds the background behind it. Batch up to 50 images in parallel, free, no sign-up, and your photos never leave your device.',
   b1:'🔒 100% local — no upload', b2:'⚡ Up to 50 parallel tasks', b3:'🆓 Free, no signup', b4:'📦 Batch + ZIP download',
   drop:'Drop images here, click to browse, or paste from clipboard (⌘/Ctrl+V). JPG · PNG · WebP — add as many as you like.',
   demoBtn:'🎲 Try with demo images',
@@ -604,7 +629,12 @@ en:{
   fa4:'Fast: thin marks on smooth backgrounds, quickest. Standard (Telea): the everyday choice for text and logos. Fine: larger areas and textured backgrounds — slower but cleaner.',
   fq5:'Is it free? Any limits?',
   fa5:'Completely free, no signup, no watermark on the output, no file count limit. Concurrency tops out at 50 parallel tasks; larger batches simply queue up.',
-  footCode:'Codename · 归墟 Guixu — 八纮九野之水，天汉之流，莫不注之；水印没入归墟，一去不返。All waters drain into the abyss of Guixu — watermarks included.',
+  footCode:'Codename · 归墟灵蛟 — 灵蛟举漩涡之盘镇于归墟；八纮九野之水莫不注之，水印没入，一去不返。The dragon-spirit holds the vortex disc over the abyss where all waters return — watermarks included.',
+  st1:'Add images', st2:'Mark the watermark', st3:'Process & download',
+  nextMark:'Step 2 — mark the watermark on an image', btnOpenFirst:'Open first image',
+  nextProcess:'{n} marked image(s) ready to process', nextDone:'All done — grab your files',
+  ghostHint:'Drag a rectangle or brush over the watermark',
+  pBefore:'◀ Before', pAfter:'After ▶',
   ttTheme:'Theme: auto / light / dark', ttBrush:'Brush (B)', ttEraser:'Eraser (E)', ttRect:'Rectangle (R)',
   edBack:'Grid', tBrush:'Brush', tEraser:'Eraser', tRect:'Rect', edSize:'Size',
   edUndo:'↶ Undo', edClear:'Clear', edApplyAll:'Apply to all', edRun1:'▶ Process this', edCmp:'Compare',
@@ -622,7 +652,7 @@ en:{
 zh:{
   navTag:'免费 · 纯本地 · 批量',
   h1:'图片在线去水印工具',
-  sub:'涂抹标记水印区域，修复引擎自动重建背景 —— 支持批量处理、最高 50 并发。图片全程不上传，只在你自己的设备上处理。',
+  sub:'涂抹水印，看它消失 —— 算法自动重建背后背景。批量最高 50 张并行，免费、无需注册，图片永不上传。',
   b1:'🔒 纯本地处理，不上传', b2:'⚡ 最高 50 并发', b3:'🆓 免费，无需注册', b4:'📦 批量处理 + ZIP 打包',
   drop:'把图片拖到这里、点击选择，或直接粘贴（⌘/Ctrl+V）。JPG · PNG · WebP，数量不限。',
   demoBtn:'🎲 用示例图试试',
@@ -653,7 +683,12 @@ zh:{
   fa4:'快速：简单背景上的细水印，速度最快；标准（Telea）：日常首选，适合文字和 Logo；精细：大面积和复杂纹理背景，更慢但更干净。',
   fq5:'免费吗？有次数限制吗？',
   fa5:'完全免费、无需注册、输出不带任何水印、张数不限。并发上限 50 个任务，更多的图会自动排队。',
-  footCode:'代号 · 归墟 —— 八纮九野之水，天汉之流，莫不注之；水印没入归墟，一去不返。',
+  footCode:'代号 · 归墟灵蛟 —— 灵蛟举漩涡之盘镇于归墟；八纮九野之水莫不注之，水印没入，一去不返。',
+  st1:'添加图片', st2:'标记水印', st3:'处理下载',
+  nextMark:'第 2 步 —— 打开图片，涂抹水印区域', btnOpenFirst:'打开第一张',
+  nextProcess:'{n} 张已标记，可开始处理', nextDone:'全部完成 —— 取走你的图片',
+  ghostHint:'拖矩形或用画笔涂在水印上',
+  pBefore:'◀ 处理前', pAfter:'处理后 ▶',
   ttTheme:'主题：自动 / 亮 / 暗', ttBrush:'画笔（B）', ttEraser:'橡皮（E）', ttRect:'矩形（R）',
   edBack:'返回列表', tBrush:'画笔', tEraser:'橡皮', tRect:'矩形', edSize:'大小',
   edUndo:'↶ 撤销', edClear:'清除蒙版', edApplyAll:'应用到全部', edRun1:'▶ 处理这张', edCmp:'对比',
@@ -691,9 +726,10 @@ function applyLang(l,save){
   document.querySelectorAll('[data-i18n-tt]').forEach(el=>{ el.title=t(el.dataset.i18nTt); });
   $('langBtn').textContent=zh?'EN':'中文';
   if(save)localStorage.mg_lang=l;
-  const u=new URL(location.href); 
+  const u=new URL(location.href);
   if(l==='en')u.searchParams.delete('lang'); else u.searchParams.set('lang',l);
   history.replaceState(null,'',u.pathname+(u.search==='?'?'':u.search)+u.hash);
+  updSteps();
 }
 $('langBtn').addEventListener('click',()=>applyLang(lang==='en'?'zh':'en',true));
 { // init lang: ?lang= > localStorage > browser
@@ -821,6 +857,7 @@ function renderGrid(){
     }
     renderCard(im);
   }
+  updSteps();
 }
 function badgeInfo(im){
   if(im.status==='failed')return [t('badgeFailed'),'failed'];
@@ -910,6 +947,15 @@ function drawMaskView(xm,tempOp){
     xm.stroke();
   }
   xm.globalCompositeOperation='source-over';
+  if(!cur.ops.length&&!tempOp&&edMode==='edit'){
+    const fs=Math.max(14,viewW*0.024);
+    xm.font='600 '+fs+'px -apple-system,BlinkMacSystemFont,sans-serif';
+    xm.textAlign='center'; xm.textBaseline='middle';
+    const txt=t('ghostHint'), tw=xm.measureText(txt).width;
+    xm.fillStyle='rgba(10,14,26,.55)';
+    xm.beginPath(); xm.roundRect(viewW/2-tw/2-16,viewH/2-fs,tw+32,fs*2,10); xm.fill();
+    xm.fillStyle='#fff'; xm.fillText(txt,viewW/2,viewH/2);
+  }
 }
 let tool='b', drawing=false, drawPts=null, rectStart=null, tempOp=null;
 function setTool(tl){
@@ -926,7 +972,7 @@ function evPos(e){
 }
 cvMask.addEventListener('pointerdown',e=>{
   if(!cur||edMode!=='edit')return;
-  cvMask.setPointerCapture(e.pointerId);
+  try{cvMask.setPointerCapture(e.pointerId);}catch(_){}
   const [nx,ny]=evPos(e);
   if(tool==='r'){ rectStart=[nx,ny]; tempOp={t:'r',x:nx,y:ny,w:0,h:0}; }
   else { drawing=true; drawPts=[nx,ny]; tempOp={t:tool,size:Number($('edSize').value)/1000,pts:drawPts.slice()}; }
@@ -957,7 +1003,7 @@ function endDraw(){
 }
 cvMask.addEventListener('pointerup',endDraw);
 cvMask.addEventListener('pointercancel',endDraw);
-function invalidateResult(im){ if(im.result){ im.result=null; im.status=im.ops.length?'masked':'ready'; im.ms=0; if(cur===im&&$('edCmp'))$('edCmp').style.display='none'; } if(edMode==='compare'){ edMode='edit'; $('cmpRow').classList.remove('on'); } }
+function invalidateResult(im){ if(im.result){ im.result=null; im.status=im.ops.length?'masked':'ready'; im.ms=0; if(cur===im&&$('edCmp'))$('edCmp').style.display='none'; } if(edMode==='compare'){ edMode='edit'; $('cmpRow').classList.remove('on'); } updSteps(); }
 $('edSize').addEventListener('input',()=>{});
 $('edUndo').addEventListener('click',()=>{ if(cur&&cur.ops.length){ cur.ops.pop(); invalidateResult(cur); drawEd(); } });
 $('edClear').addEventListener('click',()=>{ if(cur&&cur.ops.length){ cur.ops=[]; invalidateResult(cur); drawEd(); } });
@@ -1018,6 +1064,8 @@ function batchEnd(){
   const fail=imgs.filter(i=>i.status==='failed').length;
   toast(fmt('toastDone',{n:done,s:sec}));
   if(fail)toast(fmt('toastFail',{n:fail}),3600);
+  if(done>0)$('btnZip').classList.add('pulse');
+  updSteps();
   batchStart=0;
 }
 function runJob(im){
@@ -1067,6 +1115,7 @@ function downloadOne(im){
   canvasFrom(im).toBlob(b=>{ if(b)saveBlob(b,outName(im)); },outMime(im),state.quality);
 }
 $('btnZip').addEventListener('click',async()=>{
+  $('btnZip').classList.remove('pulse');
   const done=imgs.filter(im=>im.result);
   if(!done.length){ toast(t('toastZipNone')); return; }
   const btn=$('btnZip'); const old=btn.textContent;
@@ -1155,68 +1204,105 @@ document.addEventListener('paste',e=>{
   if(files.length){ e.preventDefault(); addFiles(files); toast('📎 +'+files.length); }
 });
 
-/* ---- demo images (drawn locally, so the tool can be tried with one click) ---- */
-function makeDemo(name,draw){
-  const c=document.createElement('canvas');
-  draw(c.getContext('2d'),c.width,c.height);
-  return new Promise(res=>c.toBlob(b=>res(new File([b],name,{type:'image/jpeg'})),'image/jpeg',0.92));
+/* ---- demo scenes (shared painters: demo files + hero proof) ---- */
+function scene1(x,w,h){
+  const sky=x.createLinearGradient(0,0,0,h*0.62);
+  sky.addColorStop(0,'#274B73'); sky.addColorStop(.6,'#7FB2D6'); sky.addColorStop(1,'#D9E8F2');
+  x.fillStyle=sky; x.fillRect(0,0,w,h*0.62);
+  x.fillStyle='rgba(255,244,214,.9)'; x.beginPath(); x.arc(w*0.72,h*0.3,h*0.0575,0,7); x.fill();
+  x.fillStyle='rgba(255,244,214,.25)'; x.beginPath(); x.arc(w*0.72,h*0.3,h*0.1125,0,7); x.fill();
+  const mts=[[.55,'#2E4A63'],[.42,'#3D6280'],[.3,'#547C99']];
+  mts.forEach(([hh,col],li)=>{
+    x.fillStyle=col; x.beginPath(); x.moveTo(0,h*0.62);
+    for(let px=0;px<=w;px+=8){
+      const yy=h*(0.62-hh*0.36*(0.55+0.45*Math.sin(px*0.004+li*2.1))-hh*0.18*Math.sin(px*0.013+li));
+      x.lineTo(px,yy);
+    }
+    x.lineTo(w,h*0.62); x.closePath(); x.fill();
+  });
+  const sea=x.createLinearGradient(0,h*0.62,0,h);
+  sea.addColorStop(0,'#33607F'); sea.addColorStop(1,'#1E3D55');
+  x.fillStyle=sea; x.fillRect(0,h*0.62,w,h*0.38);
+  x.strokeStyle='rgba(255,255,255,.12)';
+  for(let i=0;i<40;i++){ const yy=h*0.64+i*h*0.009; x.beginPath(); x.moveTo(Math.random()*w,yy); x.lineTo(Math.random()*w*0.3+Math.random()*w,yy+1); x.stroke(); }
+}
+function marks1(x,w,h){
+  x.save(); x.translate(w*0.5,h*0.45); x.rotate(-0.32);
+  x.font='700 '+(h*0.0925)+'px -apple-system,Arial,sans-serif'; x.textAlign='center';
+  x.fillStyle='rgba(255,255,255,.55)'; x.fillText('STOCK PHOTO © 2026',0,0); x.restore();
+  x.font='600 '+(h*0.0375)+'px -apple-system,Arial,sans-serif'; x.textAlign='right';
+  x.fillStyle='rgba(255,255,255,.7)'; x.fillText('watermark.co',w-24,h-24);
+}
+function scene2(x,w,h){
+  const bg=x.createLinearGradient(0,0,w,h);
+  bg.addColorStop(0,'#F2EFE9'); bg.addColorStop(1,'#DCD6CC');
+  x.fillStyle=bg; x.fillRect(0,0,w,h);
+  x.fillStyle='rgba(0,0,0,.10)'; x.beginPath(); x.ellipse(w*0.5,h*0.68,w*0.27,h*0.045,0,0,7); x.fill();
+  const bx=w*0.34,by=h*0.3,bw=w*0.32,bh2=h*0.37;
+  const pg=x.createLinearGradient(bx,by,bx+bw,by+bh2);
+  pg.addColorStop(0,'#8FB8A8'); pg.addColorStop(1,'#5D8F7C');
+  x.fillStyle=pg; x.beginPath(); x.roundRect(bx,by,bw,bh2,26); x.fill();
+  x.fillStyle='rgba(255,255,255,.55)'; x.beginPath(); x.roundRect(bx+22,by+22,bw-44,bh2*0.34,14); x.fill();
+  x.fillStyle='rgba(255,255,255,.35)'; x.beginPath(); x.roundRect(bx+22,by+bh2*0.46,bw-44,16,8); x.fill();
+  x.beginPath(); x.roundRect(bx+22,by+bh2*0.56,bw*0.6,16,8); x.fill();
+}
+function marks2(x,w,h){
+  x.fillStyle='rgba(178,64,47,.82)'; x.beginPath(); x.roundRect(26,26,168,54,12); x.fill();
+  x.fillStyle='#fff'; x.font='700 '+(h*0.0255)+'px -apple-system,Arial,sans-serif'; x.textAlign='left'; x.fillText('BRAND™',44,h*0.0564);
+  x.font='600 '+(h*0.029)+'px -apple-system,Arial,sans-serif'; x.textAlign='center';
+  x.fillStyle='rgba(40,36,30,.5)'; x.fillText('© ExampleMedia 2026 · licensed',w*0.5,h-h*0.0327);
+}
+/* hero proof: left half watermarked vs right half clean */
+function drawProof(){
+  const cv=$('proofCv'); if(!cv)return;
+  const x=cv.getContext('2d'), w=cv.width, h=cv.height;
+  x.clearRect(0,0,w,h);
+  x.save(); x.beginPath(); x.rect(0,0,w/2,h); x.clip();
+  scene1(x,w,h); marks1(x,w,h); x.restore();
+  x.save(); x.beginPath(); x.rect(w/2,0,w/2,h); x.clip();
+  scene1(x,w,h); x.restore();
+  x.fillStyle='rgba(255,255,255,.95)'; x.fillRect(w/2-2,0,4,h);
 }
 async function addDemos(){
   const mk=(w,h,fn)=>{ const c=document.createElement('canvas'); c.width=w; c.height=h; fn(c.getContext('2d'),w,h); return c; };
-  const c1=mk(1280,800,(x,w,h)=>{
-    const sky=x.createLinearGradient(0,0,0,h*0.62);
-    sky.addColorStop(0,'#274B73'); sky.addColorStop(.6,'#7FB2D6'); sky.addColorStop(1,'#D9E8F2');
-    x.fillStyle=sky; x.fillRect(0,0,w,h*0.62);
-    x.fillStyle='rgba(255,244,214,.9)'; x.beginPath(); x.arc(w*0.72,h*0.3,46,0,7); x.fill();
-    x.fillStyle='rgba(255,244,214,.25)'; x.beginPath(); x.arc(w*0.72,h*0.3,90,0,7); x.fill();
-    const mts=[[.55,'#2E4A63'],[.42,'#3D6280'],[.3,'#547C99']];
-    mts.forEach(([hh,col],li)=>{
-      x.fillStyle=col; x.beginPath(); x.moveTo(0,h*0.62);
-      for(let px=0;px<=w;px+=8){
-        const yy=h*(0.62-hh*0.36*(0.55+0.45*Math.sin(px*0.004+li*2.1))-hh*0.18*Math.sin(px*0.013+li));
-        x.lineTo(px,yy);
-      }
-      x.lineTo(w,h*0.62); x.closePath(); x.fill();
-    });
-    const sea=x.createLinearGradient(0,h*0.62,0,h);
-    sea.addColorStop(0,'#33607F'); sea.addColorStop(1,'#1E3D55');
-    x.fillStyle=sea; x.fillRect(0,h*0.62,w,h*0.38);
-    x.strokeStyle='rgba(255,255,255,.12)';
-    for(let i=0;i<40;i++){ const yy=h*0.64+i*h*0.009; x.beginPath(); x.moveTo(Math.random()*w,yy); x.lineTo(Math.random()*w*0.3+Math.random()*w,yy+1); x.stroke(); }
-    x.save(); x.translate(w*0.5,h*0.45); x.rotate(-0.32);
-    x.font='700 74px -apple-system,Arial,sans-serif'; x.textAlign='center';
-    x.fillStyle='rgba(255,255,255,.55)'; x.fillText('STOCK PHOTO © 2026',0,0); x.restore();
-    x.font='600 30px -apple-system,Arial,sans-serif'; x.textAlign='right';
-    x.fillStyle='rgba(255,255,255,.7)'; x.fillText('watermark.co',w-24,h-24);
-  });
-  const c2=mk(1100,1100,(x,w,h)=>{
-    const bg=x.createLinearGradient(0,0,w,h);
-    bg.addColorStop(0,'#F2EFE9'); bg.addColorStop(1,'#DCD6CC');
-    x.fillStyle=bg; x.fillRect(0,0,w,h);
-    x.fillStyle='rgba(0,0,0,.10)'; x.beginPath(); x.ellipse(w*0.5,h*0.68,w*0.27,h*0.045,0,0,7); x.fill();
-    const bx=w*0.34,by=h*0.3,bw=w*0.32,bh2=h*0.37;
-    const pg=x.createLinearGradient(bx,by,bx+bw,by+bh2);
-    pg.addColorStop(0,'#8FB8A8'); pg.addColorStop(1,'#5D8F7C');
-    x.fillStyle=pg; x.beginPath(); x.roundRect(bx,by,bw,bh2,26); x.fill();
-    x.fillStyle='rgba(255,255,255,.55)'; x.beginPath(); x.roundRect(bx+22,by+22,bw-44,bh2*0.34,14); x.fill();
-    x.fillStyle='rgba(255,255,255,.35)'; x.beginPath(); x.roundRect(bx+22,by+bh2*0.46,bw-44,16,8); x.fill();
-    x.beginPath(); x.roundRect(bx+22,by+bh2*0.56,bw*0.6,16,8); x.fill();
-    x.fillStyle='rgba(178,64,47,.82)'; x.beginPath(); x.roundRect(26,26,168,54,12); x.fill();
-    x.fillStyle='#fff'; x.font='700 28px -apple-system,Arial,sans-serif'; x.textAlign='left'; x.fillText('BRAND™',44,62);
-    x.font='600 32px -apple-system,Arial,sans-serif'; x.textAlign='center';
-    x.fillStyle='rgba(40,36,30,.5)'; x.fillText('© ExampleMedia 2026 · licensed',w*0.5,h-36);
-  });
+  const c1=mk(1280,800,(x,w,h)=>{ scene1(x,w,h); marks1(x,w,h); });
+  const c2=mk(1100,1100,(x,w,h)=>{ scene2(x,w,h); marks2(x,w,h); });
   const f1=await new Promise(res=>c1.toBlob(b=>res(new File([b],'demo-landscape.jpg',{type:'image/jpeg'})),'image/jpeg',0.92));
   const f2=await new Promise(res=>c2.toBlob(b=>res(new File([b],'demo-product.jpg',{type:'image/jpeg'})),'image/jpeg',0.92));
   await addFiles([f1,f2]);
-  toast('🎲 2 × '+t('demoBtn').replace('🎲 ','').replace('Try with demo images','demo').trim());
+  toast('🎲 +2');
+  if(imgs[0]&&imgs[0].bitmap)openEditor(imgs[0]);
 }
 $('demoBtn').addEventListener('click',e=>{ e.stopPropagation(); addDemos(); });
 
-/* ================= debug handle ================= */
-window.__MG={state,imgs,rasterizeMask,processAll,makeZip,crc32,addFiles,applyLang,setLang:applyLang};
+/* ================= guided steps ================= */
+let nextAction='';
+function updSteps(){
+  if(!uiReady)return;
+  const n=imgs.length, marked=imgs.filter(i=>i.ops.length).length, done=imgs.filter(i=>i.result).length;
+  $('st1').className=n===0?'on':'done';
+  $('st2').className=n===0?'':(marked===0?'on':'done');
+  $('st3').className=marked===0?'':(done<marked?'on':'done');
+  const bar=$('nextBar');
+  if(n===0){ nextAction=''; bar.hidden=true; return; }
+  if(marked===0){ nextAction='open'; $('nextTxt').textContent=t('nextMark'); $('nextBtn').textContent=t('btnOpenFirst'); }
+  else if(done<marked){ nextAction='run'; $('nextTxt').textContent=fmt('nextProcess',{n:marked-done}); $('nextBtn').textContent=t('btnRun'); }
+  else { nextAction='zip'; $('nextTxt').textContent=fmt('nextDone',{n:done}); $('nextBtn').textContent=t('btnZip'); }
+  bar.hidden=false;
+}
+$('nextBtn').addEventListener('click',()=>{
+  if(nextAction==='open'){ const im=imgs.find(i=>i.bitmap); if(im)openEditor(im); }
+  else if(nextAction==='run'){ processAll(); }
+  else if(nextAction==='zip'){ $('btnZip').click(); }
+});
 
+/* ================= debug handle ================= */
+window.__MG={state,imgs,rasterizeMask,processAll,makeZip,crc32,addFiles,applyLang,setLang:applyLang,drawProof};
+
+drawProof();
 renderGrid();
+uiReady=true;
+updSteps();
 </script>
 <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "948f2535a9dd4775a436c677b3c950e4"}'></script>
 </body>
