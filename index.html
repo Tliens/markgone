@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MarkGone — Free Online Watermark Remover | Batch &amp; Local</title>
+<meta name="description" content="Remove watermarks from images right in your browser: mark the area, the inpainting algorithm rebuilds the background. Batch processing with up to 50 parallel tasks — 100% local, free, no upload. 在线图片去水印，批量处理，纯本地。">
+<link rel="canonical" href="https://markgone.kuige.me/">
+<link rel="alternate" hreflang="en" href="https://markgone.kuige.me/?lang=en">
+<link rel="alternate" hreflang="zh" href="https://markgone.kuige.me/?lang=zh">
+<link rel="alternate" hreflang="x-default" href="https://markgone.kuige.me/">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="MarkGone">
+<meta property="og:title" content="MarkGone — Free Online Watermark Remover">
+<meta property="og:description" content="Mark the watermark, rebuild the background. Batch mode, up to 50 parallel tasks, images never leave your device.">
+<meta property="og:url" content="https://markgone.kuige.me/">
+<meta property="og:image" content="https://markgone.kuige.me/og-image.png">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="zh_CN">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="MarkGone — Free Online Watermark Remover">
+<meta name="twitter:description" content="Mark the watermark, rebuild the background. Batch mode, up to 50 parallel tasks, images never leave your device.">
+<meta name="twitter:image" content="https://markgone.kuige.me/og-image.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"WebApplication","name":"MarkGone","url":"https://markgone.kuige.me/","applicationCategory":"MultimediaApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"inLanguage":["en","zh-CN"],"description":"Free online watermark remover that runs entirely in your browser. Mark the watermark region, the inpainting engine rebuilds the background. Batch processing with up to 50 parallel tasks; images are never uploaded.","featureList":["Brush and rectangle mask tools","Telea / diffusion inpainting engine with three quality tiers","Batch processing with up to 50 parallel Web Workers","ZIP download of all results","100% local processing, no upload","Bilingual interface (English / Chinese)"]},
+ {"@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Are my images uploaded to a server?","acceptedAnswer":{"@type":"Answer","text":"No. MarkGone runs entirely in your browser: decoding, masking and inpainting all happen locally in Web Workers. Nothing is uploaded, and the page keeps working offline once loaded."}},
+  {"@type":"Question","name":"What kinds of watermarks can it remove?","acceptedAnswer":{"@type":"Answer","text":"Text, date stamps, logos and semi-transparent marks. You mark the region and the algorithm rebuilds it from the surrounding pixels. It works best on simple or slowly varying backgrounds; complex textures may show slight smudging."}},
+  {"@type":"Question","name":"How does batch mode work?","acceptedAnswer":{"@type":"Answer","text":"Add many images, mark the watermark on one image, click Apply mask to all to reuse the same relative position across the batch, fine-tune any image individually, then process up to 50 images in parallel."}},
+  {"@type":"Question","name":"Which quality mode should I choose?","acceptedAnswer":{"@type":"Answer","text":"Fast: thin marks on smooth backgrounds, quickest. Standard (Telea): the everyday choice for text and logos. Fine: larger areas and textured backgrounds — slower but cleaner."}},
+  {"@type":"Question","name":"Is it free? Any limits?","acceptedAnswer":{"@type":"Answer","text":"Completely free, no signup, no watermark on the output, no file count limit. Concurrency tops out at 50 parallel tasks; larger batches simply queue up."}}
+ ]}
+]}
+</script>
+<style>
+:root{
+  --bg:#F4F9FB; --panel:#FFFFFF; --panel2:#E9F2F6; --text:#14283A; --muted:#5B7186;
+  --line:#D6E3EA; --accent:#0E7C94; --accent2:#3FB6C9; --soft:rgba(63,182,201,.13);
+  --danger:#B3402F; --ok:#2E8B57; --shadow:0 12px 32px rgba(16,48,70,.10);
+  --mask:rgba(255,59,92,.5);
+}
+[data-theme="dark"]{
+  --bg:#0A1522; --panel:#0F1D30; --panel2:#13253E; --text:#DCE9F2; --muted:#7E93A8;
+  --line:#1D3450; --accent:#3FB6C9; --accent2:#56C8DA; --soft:rgba(63,182,201,.16);
+  --danger:#E06552; --ok:#5BBE7E; --shadow:0 12px 32px rgba(0,0,0,.45);
+}
+@media (prefers-color-scheme: dark){
+  [data-theme="auto"]{
+    --bg:#0A1522; --panel:#0F1D30; --panel2:#13253E; --text:#DCE9F2; --muted:#7E93A8;
+    --line:#1D3450; --accent:#3FB6C9; --accent2:#56C8DA; --soft:rgba(63,182,201,.16);
+    --danger:#E06552; --ok:#5BBE7E; --shadow:0 12px 32px rgba(0,0,0,.45);
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+main{max-width:1180px;margin:0 auto;padding:0 20px}
+header{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);background:color-mix(in srgb,var(--bg) 82%,transparent);border-bottom:1px solid var(--line)}
+.hdr-in{max-width:1180px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:17px}
+.logo svg{width:26px;height:26px;border-radius:50%;box-shadow:0 0 0 1px var(--line)}
+.logo .tag{font-size:12px;color:var(--muted);font-weight:500;margin-left:2px}
+.hdr-actions{margin-left:auto;display:flex;gap:8px}
+.chipbtn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:5px 13px;font-size:13px;cursor:pointer}
+.chipbtn:hover{border-color:var(--accent)}
+.hero{text-align:center;padding:44px 0 20px}
+h1{font-size:clamp(26px,4.6vw,40px);line-height:1.2;margin:0 0 12px;letter-spacing:-.5px}
+.sub{color:var(--muted);font-size:16px;max-width:640px;margin:0 auto 18px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chips span{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 13px;font-size:13px;color:var(--muted)}
+#dropZone{margin:26px 0 14px;border:2px dashed var(--line);border-radius:16px;background:var(--panel);padding:38px 20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+#dropZone:hover,#dropZone.over{border-color:var(--accent);background:var(--soft)}
+#dropZone p{margin:0 0 12px;color:var(--muted)}
+#dropZone .big{font-size:30px}
+#controls{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:12px 14px;margin:0 0 16px;display:flex;flex-direction:column;gap:10px}
+#controls[hidden]{display:none}
+.crow{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.crow label{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);white-space:nowrap}
+select{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:8px;padding:5px 8px;font-size:13px}
+input[type=range]{accent-color:var(--accent)}
+.crow b{font-size:13px;color:var(--text);min-width:24px;text-align:right}
+button{font:inherit}
+.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:9px;padding:7px 14px;font-size:14px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--danger)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+#cHint{font-size:12px;color:var(--muted)}
+#prog{flex:1;min-width:180px;display:none;align-items:center;gap:10px}
+#prog.on{display:flex}
+#progBarWrap{flex:1;height:8px;border-radius:99px;background:var(--panel2);overflow:hidden}
+#progBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .2s}
+#progTxt{font-size:13px;color:var(--muted);white-space:nowrap}
+#stNone{text-align:center;color:var(--muted);padding:26px 0 60px}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:14px;margin-bottom:26px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:13px;overflow:hidden;display:flex;flex-direction:column}
+.thumb{position:relative;height:150px;background:repeating-conic-gradient(var(--panel2) 0 25%,var(--panel) 0 50%) 0 0/18px 18px;cursor:pointer}
+.thumb canvas{width:100%;height:100%;display:block;object-fit:contain}
+.badge{position:absolute;top:8px;left:8px;font-size:11.5px;padding:2px 9px;border-radius:99px;background:rgba(10,21,34,.72);color:#fff;backdrop-filter:blur(4px)}
+.badge.done{background:rgba(46,139,87,.85)}
+.badge.failed{background:rgba(179,64,47,.88)}
+.badge.processing{background:rgba(14,124,148,.9)}
+.meta{padding:8px 11px 4px;display:flex;flex-direction:column;gap:1px;min-width:0}
+.nm{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm{font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.mk{color:var(--accent);font-size:12px}
+.acts{display:flex;gap:6px;padding:8px 11px 11px;margin-top:auto}
+.acts .btn{padding:4px 10px;font-size:12.5px;flex:1}
+.sec{margin:38px 0}
+.sec h2{font-size:22px;margin:0 0 6px}
+.sec .lead{color:var(--muted);margin:0 0 18px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:16px}
+.step .n{display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--soft);color:var(--accent);align-items:center;justify-content:center;font-weight:700;font-size:14px;margin-bottom:8px}
+.step h3{margin:0 0 6px;font-size:15.5px}
+.step p{margin:0;color:var(--muted);font-size:13.5px}
+table.tips{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:13px;overflow:hidden;font-size:13.5px}
+table.tips th,table.tips td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line)}
+table.tips th{color:var(--muted);font-weight:600;background:var(--panel2)}
+table.tips tr:last-child td{border-bottom:none}
+details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:0 16px;margin-bottom:10px}
+details summary{cursor:pointer;padding:12px 0;font-weight:600;font-size:14.5px;list-style:none;display:flex;align-items:center;gap:8px}
+details summary::before{content:"▸";color:var(--accent);transition:transform .15s}
+details[open] summary::before{transform:rotate(90deg)}
+details p{margin:0 0 14px;color:var(--muted);font-size:14px}
+footer{border-top:1px solid var(--line);margin-top:44px;padding:22px 20px 30px;text-align:center;color:var(--muted);font-size:13px}
+footer .code{margin-top:8px;font-size:12.5px;opacity:.85}
+/* editor */
+#editor{position:fixed;inset:0;z-index:60;background:var(--bg);display:none;flex-direction:column}
+#editor.on{display:flex}
+.ed-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+.ed-bar .nm2{font-weight:600;font-size:13.5px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tool{border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:5px 11px;font-size:13px;cursor:pointer;color:var(--text)}
+.tool.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.ed-bar label{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+#edStage{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:repeating-conic-gradient(var(--panel2) 0 25%,var(--bg) 0 50%) 0 0/22px 22px}
+#edWrap{position:relative;box-shadow:var(--shadow)}
+#edWrap canvas{position:absolute;top:0;left:0;display:block}
+#cvImg,#cvRes{position:relative}
+#cvMask{cursor:crosshair;touch-action:none}
+#edHint{padding:8px 16px;text-align:center;color:var(--muted);font-size:13px;border-top:1px solid var(--line);background:var(--panel)}
+#cmpRow{display:none;align-items:center;gap:10px;padding:7px 16px;border-top:1px solid var(--line);background:var(--panel)}
+#cmpRow.on{display:flex}
+#cmpRow span{font-size:12.5px;color:var(--muted);white-space:nowrap}
+#cmpRange{flex:1}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:9px 18px;border-radius:99px;font-size:13.5px;opacity:0;pointer-events:none;transition:all .25s;z-index:80;max-width:88vw}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:640px){
+  .hero{padding:30px 0 12px}
+  #dropZone{padding:26px 14px}
+  .crow label{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+<header><div class="hdr-in">
+  <div class="logo">
+    <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#0B1626"/><path d="M32 11 a21 21 0 1 1 -14.8 35.9" stroke="#3FB6C9" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M32 22 a10 10 0 1 1 -7 17" stroke="#8FE0EE" stroke-width="4.5" fill="none" stroke-linecap="round"/><circle cx="29.5" cy="29.5" r="3.2" fill="#EAF9FD"/></svg>
+    <b>MarkGone</b><span class="tag" data-i18n="navTag">Free · Local · Batch</span>
+  </div>
+  <div class="hdr-actions">
+    <button id="langBtn" class="chipbtn">中文</button>
+    <button id="themeBtn" class="chipbtn" data-i18n-tt="ttTheme" title="Theme: auto / light / dark">🌓</button>
+  </div>
+</div></header>
+<main>
+  <section class="hero">
+    <h1 data-i18n="h1">Free Online Watermark Remover</h1>
+    <p class="sub" data-i18n="sub">Mark the watermark, and the inpainting engine rebuilds the background — batch processing with up to 50 parallel tasks. Your images never leave your device.</p>
+    <div class="chips">
+      <span data-i18n="b1">🔒 100% local — no upload</span>
+      <span data-i18n="b2">⚡ Up to 50 parallel tasks</span>
+      <span data-i18n="b3">🆓 Free, no signup</span>
+      <span data-i18n="b4">📦 Batch + ZIP download</span>
+    </div>
+  </section>
+
+  <section id="dropZone">
+    <div class="big">🖼️</div>
+    <p data-i18n="drop">Drop images here, click to browse, or paste from clipboard (⌘/Ctrl+V). JPG · PNG · WebP — add as many as you like.</p>
+    <button id="demoBtn" class="btn" data-i18n="demoBtn">🎲 Try with demo images</button>
+    <input type="file" id="fileIn" multiple accept="image/*" hidden>
+  </section>
+
+  <section id="controls" hidden>
+    <div class="crow">
+      <label><span data-i18n="optQuality">Quality</span>
+        <select id="selQ">
+          <option value="0" data-i18n="qFast">Fast</option>
+          <option value="1" selected data-i18n="qStd">Standard</option>
+          <option value="2" data-i18n="qFine">Fine</option>
+        </select>
+      </label>
+      <label><span data-i18n="optFormat">Format</span>
+        <select id="selF">
+          <option value="auto" data-i18n="fAuto">Auto (same as input)</option>
+          <option value="image/jpeg" data-i18n="fJpg">JPG</option>
+          <option value="image/png" data-i18n="fPng">PNG</option>
+          <option value="image/webp" data-i18n="fWebp">WebP</option>
+        </select>
+      </label>
+      <label id="lqRow"><span data-i18n="optQ">JPG/WebP quality</span><input type="range" id="rgQ" min="50" max="100" value="92"><b id="qVal">92</b></label>
+      <label><span data-i18n="optConc">Parallel tasks</span><input type="range" id="rgC" min="1" max="50" value="8"><b id="cVal">8</b><span id="cHint"></span></label>
+    </div>
+    <div class="crow">
+      <button id="btnRun" class="btn primary" data-i18n="btnRun">▶ Process All</button>
+      <button id="btnZip" class="btn" data-i18n="btnZip">📦 Download ZIP</button>
+      <button id="btnClear" class="btn danger" data-i18n="btnClear">✕ Clear all</button>
+      <div id="prog"><div id="progBarWrap"><div id="progBar"></div></div><span id="progTxt"></span></div>
+    </div>
+  </section>
+
+  <p id="stNone" data-i18n="stNone">No images yet — add some above to get started.</p>
+  <div id="grid"></div>
+
+  <section class="sec" id="guide">
+    <h2 data-i18n="gTitle">How it works</h2>
+    <p class="lead" data-i18n="gLead">Three steps, all computed locally in your browser.</p>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><h3 data-i18n="g1t">Add images</h3><p data-i18n="g1d">Drag &amp; drop, click to browse or paste. JPG / PNG / WebP — from a single photo to hundreds of screenshots.</p></div>
+      <div class="step"><span class="n">2</span><h3 data-i18n="g2t">Mark the watermark</h3><p data-i18n="g2d">Paint with the brush or drag a rectangle in the editor. One mask can be applied to the whole batch, and each image can still be fine-tuned.</p></div>
+      <div class="step"><span class="n">3</span><h3 data-i18n="g3t">Process &amp; download</h3><p data-i18n="g3d">Up to 50 tasks run in parallel via Web Workers. Download results one by one or grab them all as a ZIP.</p></div>
+    </div>
+    <table class="tips" style="margin-top:18px">
+      <thead><tr><th data-i18n="tipH1">Watermark type</th><th data-i18n="tipH2">Recommended approach</th></tr></thead>
+      <tbody>
+        <tr><td data-i18n="tip1a">Text or date stamp on a plain background</td><td data-i18n="tip1b">Brush over the text, Standard quality</td></tr>
+        <tr><td data-i18n="tip2a">Large logo or big area</td><td data-i18n="tip2b">Rectangle + Fine quality</td></tr>
+        <tr><td data-i18n="tip3a">Semi-transparent mark on a photo</td><td data-i18n="tip3b">Mark slightly beyond the edges, Standard</td></tr>
+        <tr><td data-i18n="tip4a">Tiled / repeated watermark</td><td data-i18n="tip4b">Brush each occurrence, then Fine</td></tr>
+        <tr><td data-i18n="tip5a">Same watermark position in many images</td><td data-i18n="tip5b">Mark once, Apply mask to all, Process All</td></tr>
+      </tbody>
+    </table>
+    <p class="lead" style="margin-top:14px" data-i18n="gNote">Honest note: the algorithm rebuilds marked areas from surrounding pixels — results depend on how complex the background is. There is no magic, but for text, stamps and logos on normal backgrounds it is very good.</p>
+  </section>
+
+  <section class="sec" id="faq">
+    <h2 data-i18n="faqTitle">Frequently asked questions</h2>
+    <details open><summary><span data-i18n="fq1">Are my images uploaded to a server?</span></summary><p data-i18n="fa1">No. MarkGone runs entirely in your browser: decoding, masking and inpainting all happen locally in Web Workers. Nothing is uploaded, and the page keeps working offline once loaded.</p></details>
+    <details><summary><span data-i18n="fq2">What kinds of watermarks can it remove?</span></summary><p data-i18n="fa2">Text, date stamps, logos and semi-transparent marks. You mark the region and the algorithm rebuilds it from the surrounding pixels. It works best on simple or slowly varying backgrounds; complex textures may show slight smudging.</p></details>
+    <details><summary><span data-i18n="fq3">How does batch mode work?</span></summary><p data-i18n="fa3">Add many images, mark the watermark on one image, click “Apply mask to all” to reuse the same relative position across the batch, fine-tune any image individually, then process up to 50 images in parallel.</p></details>
+    <details><summary><span data-i18n="fq4">Which quality mode should I choose?</span></summary><p data-i18n="fa4">Fast: thin marks on smooth backgrounds, quickest. Standard (Telea): the everyday choice for text and logos. Fine: larger areas and textured backgrounds — slower but cleaner.</p></details>
+    <details><summary><span data-i18n="fq5">Is it free? Any limits?</span></summary><p data-i18n="fa5">Completely free, no signup, no watermark on the output, no file count limit. Concurrency tops out at 50 parallel tasks; larger batches simply queue up.</p></details>
+  </section>
+</main>
+<footer>
+  <div>MarkGone · a free tool from <a href="https://kuige.me/" target="_blank" rel="noopener">kuige.me</a> · images stay on your device</div>
+  <div class="code" data-i18n="footCode">Codename · 归墟 Guixu — 八纮九野之水，天汉之流，莫不注之；水印没入归墟，一去不返。All waters drain into the abyss of Guixu — watermarks included.</div>
+</footer>
+
+<div id="editor">
+  <div class="ed-bar">
+    <button class="tool" id="edBack">← <span data-i18n="edBack">Grid</span></button>
+    <span class="nm2" id="edName"></span>
+    <button class="tool on" id="tBrush" data-i18n-tt="ttBrush" title="Brush">🖌️ <span data-i18n="tBrush">Brush</span></button>
+    <button class="tool" id="tEraser" data-i18n-tt="ttEraser" title="Eraser">🧽 <span data-i18n="tEraser">Eraser</span></button>
+    <button class="tool" id="tRect" data-i18n-tt="ttRect" title="Rectangle">▭ <span data-i18n="tRect">Rect</span></button>
+    <label><span data-i18n="edSize">Size</span> <input type="range" id="edSize" min="4" max="160" value="30"></label>
+    <button class="tool" id="edUndo" data-i18n="edUndo">↶ Undo</button>
+    <button class="tool" id="edClear" data-i18n="edClear">Clear</button>
+    <button class="tool" id="edApplyAll" data-i18n="edApplyAll">Apply to all</button>
+    <button class="tool" id="edRun" data-i18n="edRun1">▶ Process this</button>
+    <button class="tool" id="edCmp" data-i18n="edCmp">Compare</button>
+    <span style="flex:1"></span>
+    <button class="tool" id="edClose">✕</button>
+  </div>
+  <div id="edStage">
+    <div id="edWrap">
+      <canvas id="cvImg"></canvas>
+      <canvas id="cvRes"></canvas>
+      <canvas id="cvMask"></canvas>
+    </div>
+  </div>
+  <div id="cmpRow"><span data-i18n="cmpOrig">◀ Original</span><input type="range" id="cmpRange" min="0" max="100" value="100"><span data-i18n="cmpResult">Result ▶</span></div>
+  <div id="edHint" data-i18n="edHint">Paint over the watermark — Rect for large areas, Brush for text. The mask turns red; Eraser fixes slips.</div>
+</div>
+
+<div id="toast"></div>
+
+<script type="text/worker" id="engineSrc">
+'use strict';
+/* MarkGone inpainting engine — runs inside a Web Worker.
+   Methods: 0 = multigrid Laplace diffusion (Fast), 1 = Telea FMM (Standard), 2 = Telea coarse-to-fine + grain (Fine).
+   All work is restricted to the bounding box of the mask (+ padding) so memory stays small even for huge images. */
+var KNOWN=0, BAND=1, INSIDE=2;
+
+function Heap(cap){ this.n=0; this.k=new Float64Array(cap); this.v=new Uint32Array(cap); }
+Heap.prototype.push=function(k,v){
+  var a=this.k,b=this.v,i=this.n++;
+  while(i>0){ var p=(i-1)>>1; if(a[p]<=k)break; a[i]=a[p]; b[i]=b[p]; i=p; }
+  a[i]=k; b[i]=v;
+};
+Heap.prototype.pop=function(){
+  var a=this.k,b=this.v,vert=b[0]; this.n--;
+  if(this.n>0){
+    var k=a[this.n],v=b[this.n],i=0;
+    for(;;){ var c=2*i+1; if(c>=this.n)break; if(c+1<this.n&&a[c+1]<a[c])c++; if(a[c]>=k)break; a[i]=a[c]; b[i]=b[c]; i=c; }
+    a[i]=k; b[i]=v;
+  }
+  return vert;
+};
+function esolve(fa,ta,fb,tb){
+  if(fa===KNOWN){
+    if(fb===KNOWN){
+      var d=ta-tb, r=Math.sqrt(Math.max(0,2-d*d)), s=(ta+tb-r)*0.5;
+      if(s>=ta&&s>=tb)return s;
+      s+=r; if(s>=ta&&s>=tb)return s;
+      return Math.min(1+ta,1+tb);
+    }
+    return 1+ta;
+  }
+  if(fb===KNOWN)return 1+tb;
+  return 1e6;
+}
+function bboxOf(mask,w,h){
+  var x0=w,y0=h,x1=-1,y1=-1;
+  for(var y=0;y<h;y++){ var row=y*w;
+    for(var x=0;x<w;x++){ if(mask[row+x]){
+      if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y;
+    } } }
+  if(x1<0)return null;
+  return {x0:x0,y0:y0,x1:x1,y1:y1};
+}
+/* ---- Telea FMM inpainting on the bbox sub-image ---- */
+function telea(R,G,B,bw,bh,flags,radius){
+  var N=bw*bh, T=new Float32Array(N), heap=new Heap(N), i,x,y;
+  for(i=0;i<N;i++) if(flags[i]===INSIDE) T[i]=1e6;
+  for(y=0;y<bh;y++)for(x=0;x<bw;x++){
+    var p=y*bw+x;
+    if(flags[p]!==INSIDE){
+      var edge=false;
+      if(x>0&&flags[p-1]===INSIDE)edge=true;
+      else if(x<bw-1&&flags[p+1]===INSIDE)edge=true;
+      else if(y>0&&flags[p-bw]===INSIDE)edge=true;
+      else if(y<bh-1&&flags[p+bw]===INSIDE)edge=true;
+      if(edge){ flags[p]=BAND; T[p]=0; heap.push(0,p); }
+    }
+  }
+  function grad(qx,qy,q){
+    var xm=qx>0?q-1:q, xp=qx<bw-1?q+1:q, ym=qy>0?q-bw:q, yp=qy<bh-1?q+bw:q;
+    var gx,gy;
+    if(flags[xp]!==INSIDE&&flags[xm]!==INSIDE) gx=(T[xp]-T[xm])*0.5;
+    else if(flags[xp]!==INSIDE) gx=T[xp]-T[q];
+    else if(flags[xm]!==INSIDE) gx=T[q]-T[xm];
+    else gx=0;
+    if(flags[yp]!==INSIDE&&flags[ym]!==INSIDE) gy=(T[yp]-T[ym])*0.5;
+    else if(flags[yp]!==INSIDE) gy=T[yp]-T[q];
+    else if(flags[ym]!==INSIDE) gy=T[q]-T[ym];
+    else gy=0;
+    var gn=Math.sqrt(gx*gx+gy*gy);
+    if(gn>1e-12){ gx/=gn; gy/=gn; } else { gx=0; gy=0; }
+    return [gx,gy];
+  }
+  function fillPix(q,qx,qy){
+    var g=grad(qx,qy,q), gx=g[0], gy=g[1], r2=radius*radius;
+    var sw=0,sr=0,sg=0,sb=0;
+    var y0=Math.max(0,qy-radius), y1=Math.min(bh-1,qy+radius);
+    var x0=Math.max(0,qx-radius), x1=Math.min(bw-1,qx+radius);
+    for(var yy=y0;yy<=y1;yy++){
+      var dy=yy-qy;
+      for(var xx=x0;xx<=x1;xx++){
+        var dx=xx-qx, d2=dx*dx+dy*dy;
+        if(d2>r2||d2===0)continue;
+        var j=yy*bw+xx;
+        if(flags[j]===INSIDE)continue;
+        var dist=Math.sqrt(d2);
+        var dir=Math.abs((dx*gx+dy*gy)/dist);
+        var lev=1/(1+Math.abs(T[j]-T[q]));
+        var wgt=dir*lev/(d2*dist);
+        sw+=wgt; sr+=R[j]*wgt; sg+=G[j]*wgt; sb+=B[j]*wgt;
+      }
+    }
+    if(sw>0){ R[q]=sr/sw; G[q]=sg/sw; B[q]=sb/sw; return; }
+    var n=0,r=0,gg=0,b=0;
+    if(qx>0&&flags[q-1]!==INSIDE){r+=R[q-1];gg+=G[q-1];b+=B[q-1];n++;}
+    if(qx<bw-1&&flags[q+1]!==INSIDE){r+=R[q+1];gg+=G[q+1];b+=B[q+1];n++;}
+    if(qy>0&&flags[q-bw]!==INSIDE){r+=R[q-bw];gg+=G[q-bw];b+=B[q-bw];n++;}
+    if(qy<bh-1&&flags[q+bw]!==INSIDE){r+=R[q+bw];gg+=G[q+bw];b+=B[q+bw];n++;}
+    if(n){ R[q]=r/n; G[q]=gg/n; B[q]=b/n; }
+  }
+  while(heap.n>0){
+    var p2=heap.pop();
+    flags[p2]=KNOWN;
+    var px=p2%bw, py=(p2/bw)|0;
+    for(var d=0;d<4;d++){
+      var qx=px+(d===0?-1:d===1?1:0), qy=py+(d===2?-1:d===3?1:0);
+      if(qx<0||qy<0||qx>=bw||qy>=bh)continue;
+      var q=qy*bw+qx;
+      if(flags[q]!==INSIDE)continue;
+      var t=1e6, s1,s2,s3,s4;
+      s1=esolve(qx>0?flags[q-1]:-1, qx>0?T[q-1]:0, qy>0?flags[q-bw]:-1, qy>0?T[q-bw]:0);
+      s2=esolve(qx<bw-1?flags[q+1]:-1, qx<bw-1?T[q+1]:0, qy>0?flags[q-bw]:-1, qy>0?T[q-bw]:0);
+      s3=esolve(qy>0?flags[q-bw]:-1, qy>0?T[q-bw]:0, qx>0?flags[q-1]:-1, qx>0?T[q-1]:0);
+      s4=esolve(qy<bh-1?flags[q+bw]:-1, qy<bh-1?T[q+bw]:0, qx>0?flags[q-1]:-1, qx>0?T[q-1]:0);
+      t=Math.min(s1,s2,s3,s4);
+      if(t>=1e6)t=1;
+      T[q]=t;
+      fillPix(q,qx,qy);
+      flags[q]=BAND;
+      heap.push(t,q);
+    }
+  }
+}
+/* ---- multigrid helpers shared by Fast (pure diffusion) and Fine (coarse Telea + diffusion refine) ---- */
+function buildPyramid(R,G,B,bw,bh,flags){
+  var levels=[{w:bw,h:bh,R:R,G:G,B:B,ins:flags}];
+  var L=levels[0];
+  while(Math.min(L.w,L.h)>72){
+    var w2=Math.ceil(L.w/2), h2=Math.ceil(L.h/2);
+    var R2=new Float32Array(w2*h2),G2=new Float32Array(w2*h2),B2=new Float32Array(w2*h2),F2=new Uint8Array(w2*h2);
+    for(var y=0;y<h2;y++)for(var x=0;x<w2;x++){
+      var r=0,g=0,b=0,c=0,ins=false;
+      for(var dy=0;dy<2;dy++)for(var dx=0;dx<2;dx++){
+        var sx=Math.min(L.w-1,x*2+dx), sy=Math.min(L.h-1,y*2+dy), si=sy*L.w+sx;
+        r+=L.R[si]; g+=L.G[si]; b+=L.B[si]; c++;
+        if(L.ins[si]===INSIDE)ins=true;
+      }
+      var i=y*w2+x;
+      R2[i]=r/c; G2[i]=g/c; B2[i]=b/c; F2[i]=ins?INSIDE:KNOWN;
+    }
+    L={w:w2,h:h2,R:R2,G:G2,B:B2,ins:F2};
+    levels.push(L);
+  }
+  return levels;
+}
+function upsample(F,C){
+  for(var y=0;y<F.h;y++)for(var x=0;x<F.w;x++){
+    var i=y*F.w+x;
+    if(F.ins[i]!==INSIDE)continue;
+    var fx=Math.min(C.w-1,Math.max(0,(x-0.5)/2)), fy=Math.min(C.h-1,Math.max(0,(y-0.5)/2));
+    var x0=Math.floor(fx), y0=Math.floor(fy), x1=Math.min(C.w-1,x0+1), y1=Math.min(C.h-1,y0+1);
+    var ax=fx-x0, ay=fy-y0;
+    var i00=y0*C.w+x0, i10=y0*C.w+x1, i01=y1*C.w+x0, i11=y1*C.w+x1;
+    var w00=(1-ax)*(1-ay), w10=ax*(1-ay), w01=(1-ax)*ay, w11=ax*ay;
+    F.R[i]=C.R[i00]*w00+C.R[i10]*w10+C.R[i01]*w01+C.R[i11]*w11;
+    F.G[i]=C.G[i00]*w00+C.G[i10]*w10+C.G[i01]*w01+C.G[i11]*w11;
+    F.B[i]=C.B[i00]*w00+C.B[i10]*w10+C.B[i01]*w01+C.B[i11]*w11;
+  }
+}
+function jacobi(L,iters){
+  var w=L.w,h=L.h,ins=L.ins,N=w*h;
+  var R2=new Float32Array(N),G2=new Float32Array(N),B2=new Float32Array(N);
+  for(var it=0;it<iters;it++){
+    for(var y=0;y<h;y++)for(var x=0;x<w;x++){
+      var i=y*w+x;
+      if(ins[i]!==INSIDE){ R2[i]=L.R[i]; G2[i]=L.G[i]; B2[i]=L.B[i]; continue; }
+      var xm=x>0?i-1:i, xp=x<w-1?i+1:i, ym=y>0?i-w:i, yp=y<h-1?i+w:i;
+      R2[i]=(L.R[xm]+L.R[xp]+L.R[ym]+L.R[yp])*0.25;
+      G2[i]=(L.G[xm]+L.G[xp]+L.G[ym]+L.G[yp])*0.25;
+      B2[i]=(L.B[xm]+L.B[xp]+L.B[ym]+L.B[yp])*0.25;
+    }
+    L.R.set(R2); L.G.set(G2); L.B.set(B2);
+  }
+}
+function laplace(R,G,B,bw,bh,flags){
+  var levels=buildPyramid(R,G,B,bw,bh,flags);
+  jacobi(levels[levels.length-1],160);
+  for(var li=levels.length-2;li>=0;li--){
+    upsample(levels[li],levels[li+1]);
+    jacobi(levels[li],12);
+  }
+}
+/* Fine: Telea at the coarsest level for large-scale structure, then diffusion refine per level.
+   Pure Telea on big masks streaks badly; the pyramid removes the smears. */
+function inpaintFine(R,G,B,bw,bh,flags){
+  var levels=buildPyramid(R,G,B,bw,bh,flags);
+  var C=levels[levels.length-1];
+  telea(C.R,C.G,C.B,C.w,C.h,C.ins,5);
+  for(var li=levels.length-2;li>=0;li--){
+    upsample(levels[li],levels[li+1]);
+    jacobi(levels[li],li===0?26:16);
+  }
+}
+/* ---- grain matched to surrounding texture (for Fast & Fine) ---- */
+function grain(R,G,B,bw,bh,inside0){
+  var n=0,sr=0,sg=0,sb=0,x,y,i,j;
+  for(y=1;y<bh-1;y++)for(x=1;x<bw-1;x++){
+    i=y*bw+x;
+    if(!inside0[i])continue;
+    var nb=[i-1,i+1,i-bw,i+bw];
+    for(var k=0;k<4;k++){
+      j=nb[k];
+      if(!inside0[j]){
+        var lx=j%bw, ly=(j/bw)|0;
+        var xm=lx>0?j-1:j, xp=lx<bw-1?j+1:j, ym=ly>0?j-bw:j, yp=ly<bh-1?j+bw:j;
+        sr+=Math.abs((R[xm]+R[xp]+R[ym]+R[yp])*0.25-R[j]);
+        sg+=Math.abs((G[xm]+G[xp]+G[ym]+G[yp])*0.25-G[j]);
+        sb+=Math.abs((B[xm]+B[xp]+B[ym]+B[yp])*0.25-B[j]);
+        n++;
+      }
+    }
+  }
+  if(!n)return;
+  var aR=Math.min(10,sr/n), aG=Math.min(10,sg/n), aB=Math.min(10,sb/n);
+  if(aR+aG+aB<3)return;
+  var seed=0x9E3779B9;
+  function rnd(){ seed^=seed<<13; seed^=seed>>>17; seed^=seed<<5; return ((seed>>>0)/4294967296); }
+  for(i=0;i<bw*bh;i++){
+    if(!inside0[i])continue;
+    R[i]+= (rnd()-0.5)*aR*1.2;
+    G[i]+= (rnd()-0.5)*aG*1.2;
+    B[i]+= (rnd()-0.5)*aB*1.2;
+  }
+}
+/* ---- main entry ---- */
+function inpaint(rgba,w,h,mask,method){
+  var bb=bboxOf(mask,w,h);
+  if(!bb)return 0;
+  var radius=method===2?9:6;
+  var pad=radius*3+8;
+  var bx0=Math.max(0,bb.x0-pad), by0=Math.max(0,bb.y0-pad);
+  var bx1=Math.min(w-1,bb.x1+pad), by1=Math.min(h-1,bb.y1+pad);
+  var bw=bx1-bx0+1, bh=by1-by0+1, N=bw*bh;
+  var R=new Float32Array(N),G=new Float32Array(N),B=new Float32Array(N);
+  var flags=new Uint8Array(N), count=0, x,y,i,gi;
+  for(y=0;y<bh;y++){ var gy=by0+y;
+    for(x=0;x<bw;x++){ var gx=bx0+x;
+      i=y*bw+x; gi=gy*w+gx;
+      R[i]=rgba[gi*4]; G[i]=rgba[gi*4+1]; B[i]=rgba[gi*4+2];
+      if(mask[gi]>=128){ flags[i]=INSIDE; count++; }
+    }
+  }
+  if(!count)return 0;
+  if(method===0){
+    laplace(R,G,B,bw,bh,flags);
+    grain(R,G,B,bw,bh,flags);
+  } else if(method===1){
+    telea(R,G,B,bw,bh,flags,radius);
+  } else {
+    inpaintFine(R,G,B,bw,bh,flags);
+    grain(R,G,B,bw,bh,flags);
+  }
+  for(y=0;y<bh;y++){ var gy2=by0+y;
+    for(x=0;x<bw;x++){ var gx2=bx0+x;
+      if(mask[gy2*w+gx2]>=128){
+        i=y*bw+x; gi=(gy2*w+gx2)*4;
+        var vr=R[i]<0?0:R[i]>255?255:R[i];
+        var vg=G[i]<0?0:G[i]>255?255:G[i];
+        var vb=B[i]<0?0:B[i]>255?255:B[i];
+        rgba[gi]=vr; rgba[gi+1]=vg; rgba[gi+2]=vb;
+      }
+    }
+  }
+  return count;
+}
+self.onmessage=function(e){
+  var m=e.data;
+  try{
+    var rgba=new Uint8ClampedArray(m.rgba);
+    var mask=new Uint8Array(m.mask);
+    var t0=Date.now();
+    var n=inpaint(rgba,m.w,m.h,mask,m.method|0);
+    self.postMessage({type:'done',id:m.id,rgba:rgba.buffer,count:n,ms:Date.now()-t0},[rgba.buffer]);
+  }catch(err){
+    self.postMessage({type:'err',id:m.id,msg:String(err&&err.message||err)});
+  }
+};
+</script>
+
+<script type="module">
+const $=id=>document.getElementById(id);
+const dpr=Math.min(2,window.devicePixelRatio||1);
+
+/* ================= i18n ================= */
+const T_EN_TITLE='MarkGone — Free Online Watermark Remover | Batch & Local';
+const T_ZH_TITLE='MarkGone — 图片在线去水印 | 批量处理 · 纯本地';
+const D={
+en:{
+  navTag:'Free · Local · Batch',
+  h1:'Free Online Watermark Remover',
+  sub:'Mark the watermark, and the inpainting engine rebuilds the background — batch processing with up to 50 parallel tasks. Your images never leave your device.',
+  b1:'🔒 100% local — no upload', b2:'⚡ Up to 50 parallel tasks', b3:'🆓 Free, no signup', b4:'📦 Batch + ZIP download',
+  drop:'Drop images here, click to browse, or paste from clipboard (⌘/Ctrl+V). JPG · PNG · WebP — add as many as you like.',
+  demoBtn:'🎲 Try with demo images',
+  optQuality:'Quality', qFast:'Fast', qStd:'Standard', qFine:'Fine',
+  optFormat:'Format', fAuto:'Auto (same as input)', fJpg:'JPG', fPng:'PNG', fWebp:'WebP',
+  optQ:'JPG/WebP quality', optConc:'Parallel tasks',
+  btnRun:'▶ Process All', btnZip:'📦 Download ZIP', btnClear:'✕ Clear all',
+  stNone:'No images yet — add some above to get started.',
+  gTitle:'How it works', gLead:'Three steps, all computed locally in your browser.',
+  g1t:'Add images', g1d:'Drag & drop, click to browse or paste. JPG / PNG / WebP — from a single photo to hundreds of screenshots.',
+  g2t:'Mark the watermark', g2d:'Paint with the brush or drag a rectangle in the editor. One mask can be applied to the whole batch, and each image can still be fine-tuned.',
+  g3t:'Process & download', g3d:'Up to 50 tasks run in parallel via Web Workers. Download results one by one or grab them all as a ZIP.',
+  tipH1:'Watermark type', tipH2:'Recommended approach',
+  tip1a:'Text or date stamp on a plain background', tip1b:'Brush over the text, Standard quality',
+  tip2a:'Large logo or big area', tip2b:'Rectangle + Fine quality',
+  tip3a:'Semi-transparent mark on a photo', tip3b:'Mark slightly beyond the edges, Standard',
+  tip4a:'Tiled / repeated watermark', tip4b:'Brush each occurrence, then Fine',
+  tip5a:'Same watermark position in many images', tip5b:'Mark once, Apply mask to all, Process All',
+  gNote:'Honest note: the algorithm rebuilds marked areas from surrounding pixels — results depend on how complex the background is. There is no magic, but for text, stamps and logos on normal backgrounds it is very good.',
+  faqTitle:'Frequently asked questions',
+  fq1:'Are my images uploaded to a server?',
+  fa1:'No. MarkGone runs entirely in your browser: decoding, masking and inpainting all happen locally in Web Workers. Nothing is uploaded, and the page keeps working offline once loaded.',
+  fq2:'What kinds of watermarks can it remove?',
+  fa2:'Text, date stamps, logos and semi-transparent marks. You mark the region and the algorithm rebuilds it from the surrounding pixels. It works best on simple or slowly varying backgrounds; complex textures may show slight smudging.',
+  fq3:'How does batch mode work?',
+  fa3:'Add many images, mark the watermark on one image, click “Apply mask to all” to reuse the same relative position across the batch, fine-tune any image individually, then process up to 50 images in parallel.',
+  fq4:'Which quality mode should I choose?',
+  fa4:'Fast: thin marks on smooth backgrounds, quickest. Standard (Telea): the everyday choice for text and logos. Fine: larger areas and textured backgrounds — slower but cleaner.',
+  fq5:'Is it free? Any limits?',
+  fa5:'Completely free, no signup, no watermark on the output, no file count limit. Concurrency tops out at 50 parallel tasks; larger batches simply queue up.',
+  footCode:'Codename · 归墟 Guixu — 八纮九野之水，天汉之流，莫不注之；水印没入归墟，一去不返。All waters drain into the abyss of Guixu — watermarks included.',
+  ttTheme:'Theme: auto / light / dark', ttBrush:'Brush (B)', ttEraser:'Eraser (E)', ttRect:'Rectangle (R)',
+  edBack:'Grid', tBrush:'Brush', tEraser:'Eraser', tRect:'Rect', edSize:'Size',
+  edUndo:'↶ Undo', edClear:'Clear', edApplyAll:'Apply to all', edRun1:'▶ Process this', edCmp:'Compare',
+  cmpOrig:'◀ Original', cmpResult:'Result ▶',
+  edHint:'Paint over the watermark — Rect for large areas, Brush for text. The mask turns red; Eraser fixes slips.',
+  badgeUnmarked:'unmarked', badgeReady:'ready', badgeProcessing:'processing…', badgeDone:'done', badgeFailed:'failed',
+  noteScaled:'resized', hintConc:'(above CPU cores — fine for small images)',
+  toastApplied:'Mask applied to {n} images', toastNone:'No marked images to process — paint a mask first.',
+  toastSkipped:'{n} unmarked images were skipped', toastDone:'{n} image(s) done in {s}s',
+  toastCleared:'Cleared', toastDecode:'Could not decode “{name}”', toastZipReady:'ZIP ready — {n} file(s)',
+  toastZipNone:'No finished results to pack yet', toastFail:'{n} task(s) failed — check the badge',
+  zipBusy:'Packing…', confirmClear:'Remove all {n} images?',
+  progTxt:'{d}/{t} done · {r} running',
+},
+zh:{
+  navTag:'免费 · 纯本地 · 批量',
+  h1:'图片在线去水印工具',
+  sub:'涂抹标记水印区域，修复引擎自动重建背景 —— 支持批量处理、最高 50 并发。图片全程不上传，只在你自己的设备上处理。',
+  b1:'🔒 纯本地处理，不上传', b2:'⚡ 最高 50 并发', b3:'🆓 免费，无需注册', b4:'📦 批量处理 + ZIP 打包',
+  drop:'把图片拖到这里、点击选择，或直接粘贴（⌘/Ctrl+V）。JPG · PNG · WebP，数量不限。',
+  demoBtn:'🎲 用示例图试试',
+  optQuality:'修复质量', qFast:'快速', qStd:'标准（Telea）', qFine:'精细',
+  optFormat:'输出格式', fAuto:'自动（与原图一致）', fJpg:'JPG', fPng:'PNG', fWebp:'WebP',
+  optQ:'JPG/WebP 质量', optConc:'并发数',
+  btnRun:'▶ 全部处理', btnZip:'📦 打包下载 ZIP', btnClear:'✕ 清空',
+  stNone:'还没有图片 —— 在上方添加几张开始吧。',
+  gTitle:'使用方法', gLead:'三步完成，全程在浏览器本地计算。',
+  g1t:'添加图片', g1d:'拖入、点击选择或粘贴。JPG / PNG / WebP，一张照片到几百张截图都可以。',
+  g2t:'标记水印', g2d:'在编辑器里用画笔涂抹或拖出矩形。蒙版可一键应用到整批图片，每张也还能单独微调。',
+  g3t:'处理并下载', g3d:'最多 50 个任务经 Web Worker 并行处理，结果逐张下载或打包成 ZIP。',
+  tipH1:'水印类型', tipH2:'推荐做法',
+  tip1a:'纯背景上的文字 / 日期戳', tip1b:'画笔涂过文字，标准质量',
+  tip2a:'大 Logo 或大面积水印', tip2b:'矩形框选 + 精细质量',
+  tip3a:'照片上的半透明水印', tip3b:'标记范围略大于水印边缘，标准',
+  tip4a:'平铺 / 重复水印', tip4b:'逐个涂抹后用精细质量',
+  tip5a:'多张图水印位置相同', tip5b:'标一次 → 应用到全部 → 全部处理',
+  gNote:'说明：算法根据周边像素重建被标记区域，效果取决于背景复杂度。没有魔法，但对普通背景上的文字、日期戳和 Logo 效果相当好。',
+  faqTitle:'常见问题',
+  fq1:'图片会被上传到服务器吗？',
+  fa1:'不会。MarkGone 完全在浏览器内运行：解码、蒙版、修复全部由本地 Web Worker 完成，任何数据都不上传；页面加载完成后离线也能用。',
+  fq2:'能去哪类水印？',
+  fa2:'文字、日期戳、Logo、半透明水印都可以：标记区域后算法根据周边像素重建。背景越简单效果越好，复杂纹理背景可能有轻微涂抹感。',
+  fq3:'批量模式怎么用？',
+  fa3:'添加多张图片，在其中一张上标记水印，点「应用到全部」把相同（相对）位置复用到整批，再单独微调个别图，最后最多 50 张并行处理。',
+  fq4:'三种质量怎么选？',
+  fa4:'快速：简单背景上的细水印，速度最快；标准（Telea）：日常首选，适合文字和 Logo；精细：大面积和复杂纹理背景，更慢但更干净。',
+  fq5:'免费吗？有次数限制吗？',
+  fa5:'完全免费、无需注册、输出不带任何水印、张数不限。并发上限 50 个任务，更多的图会自动排队。',
+  footCode:'代号 · 归墟 —— 八纮九野之水，天汉之流，莫不注之；水印没入归墟，一去不返。',
+  ttTheme:'主题：自动 / 亮 / 暗', ttBrush:'画笔（B）', ttEraser:'橡皮（E）', ttRect:'矩形（R）',
+  edBack:'返回列表', tBrush:'画笔', tEraser:'橡皮', tRect:'矩形', edSize:'大小',
+  edUndo:'↶ 撤销', edClear:'清除蒙版', edApplyAll:'应用到全部', edRun1:'▶ 处理这张', edCmp:'对比',
+  cmpOrig:'◀ 原图', cmpResult:'结果 ▶',
+  edHint:'在水印上涂抹 —— 大面积用矩形、文字用画笔。蒙版显示为红色，涂错用橡皮擦掉。',
+  badgeUnmarked:'未标记', badgeReady:'待处理', badgeProcessing:'处理中…', badgeDone:'已完成', badgeFailed:'失败',
+  noteScaled:'已缩放', hintConc:'（高于 CPU 核心数，处理大图可能卡顿）',
+  toastApplied:'蒙版已应用到 {n} 张图片', toastNone:'没有已标记的图片 —— 请先涂抹蒙版。',
+  toastSkipped:'{n} 张未标记已跳过', toastDone:'{n} 张处理完成，用时 {s} 秒',
+  toastCleared:'已清空', toastDecode:'无法解码「{name}」', toastZipReady:'ZIP 已生成 —— {n} 个文件',
+  toastZipNone:'还没有可打包的结果', toastFail:'{n} 个任务失败 —— 请看卡片角标',
+  zipBusy:'打包中…', confirmClear:'确定移除全部 {n} 张图片吗？',
+  progTxt:'完成 {d}/{t} · 进行中 {r}',
+}};
+let lang='en';
+function t(k){ const d=D[lang]||D.en; return (k in d)?d[k]:(D.en[k]||k); }
+function fmt(k,map){ let s=t(k); for(const [a,b] of Object.entries(map)) s=s.replaceAll('{'+a+'}',b); return s; }
+const metaDesc=document.querySelector('meta[name="description"]');
+const ogT=document.querySelector('meta[property="og:title"]');
+const ogD=document.querySelector('meta[property="og:description"]');
+const twT=document.querySelector('meta[name="twitter:title"]');
+const twD=document.querySelector('meta[name="twitter:description"]');
+function applyLang(l,save){
+  lang=l;
+  document.documentElement.lang=l==='zh'?'zh-CN':'en';
+  document.title=l==='zh'?T_ZH_TITLE:T_EN_TITLE;
+  const zh=l==='zh';
+  const desc=zh?'在浏览器里直接去除图片水印：涂抹标记水印区域，修复算法自动重建背景；支持批量处理、最高 50 并发，图片不上传、纯本地、免费。':
+    'Remove watermarks from images right in your browser: mark the area, the inpainting algorithm rebuilds the background. Batch processing with up to 50 parallel tasks — 100% local, free, no upload.';
+  const tt=zh?'MarkGone — 图片在线去水印工具':'MarkGone — Free Online Watermark Remover';
+  const td=zh?'涂抹水印区域，算法重建背景 —— 批量处理、最高 50 并发、图片不上传。':'Mark the watermark, rebuild the background. Batch mode, up to 50 parallel tasks, images never leave your device.';
+  metaDesc.setAttribute('content',desc); ogT.setAttribute('content',tt); ogD.setAttribute('content',td);
+  twT.setAttribute('content',tt); twD.setAttribute('content',td);
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent=t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-tt]').forEach(el=>{ el.title=t(el.dataset.i18nTt); });
+  $('langBtn').textContent=zh?'EN':'中文';
+  if(save)localStorage.mg_lang=l;
+  const u=new URL(location.href); 
+  if(l==='en')u.searchParams.delete('lang'); else u.searchParams.set('lang',l);
+  history.replaceState(null,'',u.pathname+(u.search==='?'?'':u.search)+u.hash);
+}
+$('langBtn').addEventListener('click',()=>applyLang(lang==='en'?'zh':'en',true));
+{ // init lang: ?lang= > localStorage > browser
+  const q=new URLSearchParams(location.search).get('lang');
+  if(q==='zh'||q==='en')applyLang(q,false);
+  else{
+    const saved=localStorage.mg_lang;
+    applyLang(saved==='zh'||saved==='en'?saved:(navigator.language&&navigator.language.startsWith('zh')?'zh':'en'),false);
+  }
+}
+
+/* ================= theme ================= */
+let theme=localStorage.mg_theme||'auto';
+const THEME_ICON={auto:'🌓',light:'☀️',dark:'🌙'};
+function applyTheme(){ document.documentElement.dataset.theme=theme; $('themeBtn').textContent=THEME_ICON[theme]; localStorage.mg_theme=theme; }
+$('themeBtn').addEventListener('click',()=>{ theme=theme==='auto'?'light':theme==='light'?'dark':'auto'; applyTheme(); });
+applyTheme();
+
+/* ================= state ================= */
+const state={method:1,mime:'auto',quality:0.92,conc:Math.min(50,Math.max(1,navigator.hardwareConcurrency||4))};
+const imgs=[]; let seq=0; let cur=null; let edMode='edit'; let viewW=0,viewH=0;
+const queue=[]; let running=0; let batchStart=0, batchTotal=0, batchDone=0;
+const pool=[]; const jobs=new Map(); let jobSeq=0;
+const wurl=URL.createObjectURL(new Blob([$('engineSrc').textContent],{type:'text/javascript'}));
+function spawnWorker(){ return {w:new Worker(wurl),busy:false}; }
+function getWorker(){ let e=pool.find(p=>!p.busy); if(!e&&pool.length<50){e=spawnWorker();pool.push(e);} return e; }
+
+/* ================= helpers ================= */
+function toast(msg,ms=2600){
+  const el=$('toast'); el.textContent=msg; el.classList.add('on');
+  clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('on'),ms);
+}
+function extOf(type){ return type==='image/png'?'png':type==='image/webp'?'webp':'jpg'; }
+function outMime(im){
+  if(state.mime!=='auto')return state.mime;
+  return (im.type==='image/jpeg'||im.type==='image/png'||im.type==='image/webp')?im.type:'image/png';
+}
+function outName(im){ const base=(im.name||'image').replace(/\.[^.]+$/,''); return base+'-markgone.'+extOf(outMime(im)); }
+function canvasFrom(im){
+  const c=document.createElement('canvas'); c.width=im.w; c.height=im.h;
+  c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(im.result.buffer),im.w,im.h),0,0);
+  return c;
+}
+function saveBlob(blob,name){
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+
+/* ================= mask model =================
+   ops: [{t:'b'|'e', size, pts:[x,y,...] normalized by w/h}, {t:'r', x,y,w,h}] */
+function rasterizeMask(im){
+  const c=document.createElement('canvas'); c.width=im.w; c.height=im.h;
+  const x=c.getContext('2d',{willReadFrequently:true});
+  x.lineCap='round'; x.lineJoin='round';
+  for(const op of im.ops){
+    if(op.t==='r'){ x.fillStyle='#fff'; x.fillRect(op.x*im.w,op.y*im.h,op.w*im.w,op.h*im.h); continue; }
+    x.globalCompositeOperation=op.t==='e'?'destination-out':'source-over';
+    x.strokeStyle='#fff'; x.fillStyle='#fff';
+    x.lineWidth=Math.max(1,op.size*Math.min(im.w,im.h));
+    const pts=op.pts;
+    x.beginPath();
+    if(pts.length===2){ const r=x.lineWidth/2; x.arc(pts[0]*im.w,pts[1]*im.h,r,0,7); x.fill(); continue; }
+    x.moveTo(pts[0]*im.w,pts[1]*im.h);
+    for(let i=2;i<pts.length;i+=2)x.lineTo(pts[i]*im.w,pts[i+1]*im.h);
+    x.stroke();
+  }
+  x.globalCompositeOperation='source-over';
+  const d=x.getImageData(0,0,im.w,im.h).data;
+  const m=new Uint8Array(im.w*im.h);
+  for(let i=0,n=im.w*im.h;i<n;i++)m[i]=d[i*4+3]>127?255:0;
+  return m;
+}
+
+/* ================= adding images ================= */
+const MAXDIM=8192;
+async function addFiles(list){
+  const files=[...list].filter(f=>f&&f.type&&f.type.startsWith('image/')||/\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(f&&f.name||''));
+  if(!files.length)return;
+  $('controls').hidden=false; $('stNone').style.display='none';
+  for(const f of files){
+    const im={id:++seq,name:f.name||('pasted-'+seq+'.png'),type:f.type||'image/png',ops:[],result:null,ms:0,status:'ready',bitmap:null,w:0,h:0,err:'',scaled:false};
+    try{
+      let bmp=await createImageBitmap(f,{imageOrientation:'from-image'});
+      if(Math.max(bmp.width,bmp.height)>MAXDIM){
+        const sc=MAXDIM/Math.max(bmp.width,bmp.height);
+        const c=document.createElement('canvas'); c.width=Math.round(bmp.width*sc); c.height=Math.round(bmp.height*sc);
+        c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+        bmp=await createImageBitmap(c);
+        im.scaled=true;
+      }
+      im.bitmap=bmp; im.w=bmp.width; im.h=bmp.height; im.status=im.ops.length?'masked':'ready';
+    }catch(e){ im.status='failed'; im.err='decode'; }
+    imgs.push(im);
+  }
+  renderGrid();
+  const bad=imgs.filter(i=>i.status==='failed').length;
+  if(bad)toast(fmt('toastDecode',{name:String(bad)}));
+}
+function removeImg(im){
+  const i=imgs.indexOf(im); if(i>=0)imgs.splice(i,1);
+  if(queue.includes(im)){ queue.splice(queue.indexOf(im),1); }
+  if(!imgs.length){ $('controls').hidden=true; $('stNone').style.display=''; }
+  renderGrid();
+}
+
+/* ================= grid ================= */
+function renderGrid(){
+  const g=$('grid');
+  for(const el of [...g.children]) if(!imgs.includes(el._im)) el.remove();
+  for(const im of imgs){
+    if(!im.el){
+      const el=document.createElement('div'); el.className='card';
+      el.innerHTML='<div class="thumb"><canvas width="360" height="240"></canvas><span class="badge"></span></div>'
+        +'<div class="meta"><span class="nm"></span><span class="dm"></span></div>'
+        +'<div class="acts"><button class="btn bEdit">✏️</button><button class="btn bDl">⬇️</button><button class="btn bDel">🗑</button></div>';
+      el._im=im;
+      el.querySelector('.thumb').addEventListener('click',()=>openEditor(im));
+      el.querySelector('.bEdit').addEventListener('click',()=>openEditor(im));
+      el.querySelector('.bDl').addEventListener('click',()=>downloadOne(im));
+      el.querySelector('.bDel').addEventListener('click',()=>removeImg(im));
+      im.el=el; im.cv=el.querySelector('canvas'); im.badge=el.querySelector('.badge');
+      im.nmEl=el.querySelector('.nm'); im.dmEl=el.querySelector('.dm'); im.dlBtn=el.querySelector('.bDl');
+      g.appendChild(el);
+    }
+    renderCard(im);
+  }
+}
+function badgeInfo(im){
+  if(im.status==='failed')return [t('badgeFailed'),'failed'];
+  if(im.status==='processing')return [t('badgeProcessing'),'processing'];
+  if(im.status==='done')return [t('badgeDone'),'done'];
+  if(!im.ops.length)return [t('badgeUnmarked'),''];
+  return [t('badgeReady'),''];
+}
+function drawThumb(im){
+  const cv=im.cv,x=cv.getContext('2d');
+  x.clearRect(0,0,cv.width,cv.height);
+  const src=im.result?canvasFrom(im):im.bitmap;
+  const sc=Math.min(cv.width/src.width,cv.height/src.height);
+  const w=src.width*sc,h=src.height*sc;
+  x.drawImage(src,(cv.width-w)/2,(cv.height-h)/2,w,h);
+}
+function renderCard(im){
+  if(!im.el)return;
+  const [txt,cls]=badgeInfo(im);
+  im.badge.textContent=txt; im.badge.className='badge '+cls;
+  im.nmEl.textContent=im.name; im.nmEl.title=im.name;
+  im.dmEl.innerHTML='';
+  const dims=document.createElement('span'); dims.textContent=im.w+'×'+im.h;
+  im.dmEl.appendChild(dims);
+  if(im.scaled){ const s=document.createElement('span'); s.textContent='· '+t('noteScaled'); im.dmEl.appendChild(s); }
+  if(im.ops.length){ const mk=document.createElement('span'); mk.className='mk'; mk.textContent='🖌'+im.ops.length; im.dmEl.appendChild(mk); }
+  if(im.ms){ const ms=document.createElement('span'); ms.textContent='· '+(im.ms/1000).toFixed(1)+'s'; im.dmEl.appendChild(ms); }
+  im.dlBtn.disabled=!im.result;
+  drawThumb(im);
+}
+
+/* ================= editor ================= */
+const cvImg=$('cvImg'),cvMask=$('cvMask'),cvRes=$('cvRes');
+function openEditor(im){
+  cur=im; edMode='edit';
+  $('editor').classList.add('on');
+  $('cmpRow').classList.remove('on');
+  $('edName').textContent=im.name; $('edName').title=im.name;
+  setTool(tool);
+  $('edCmp').style.display=im.result?'':'none';
+  layoutEd();
+}
+function closeEditor(){ $('editor').classList.remove('on'); cur=null; renderGrid(); }
+function layoutEd(){
+  if(!cur)return;
+  const st=$('edStage');
+  const aw=Math.max(120,st.clientWidth-48), ah=Math.max(90,st.clientHeight-48);
+  const sc=Math.min(aw/cur.w,ah/cur.h,4);
+  viewW=Math.max(60,Math.floor(cur.w*sc)); viewH=Math.max(40,Math.floor(cur.h*sc));
+  for(const cv of [cvImg,cvMask,cvRes]){
+    cv.style.width=viewW+'px'; cv.style.height=viewH+'px';
+    cv.width=Math.round(viewW*dpr); cv.height=Math.round(viewH*dpr);
+  }
+  const wrap=$('edWrap'); wrap.style.width=viewW+'px'; wrap.style.height=viewH+'px';
+  drawEd();
+}
+function drawEd(){
+  if(!cur)return;
+  const xi=cvImg.getContext('2d'), xm=cvMask.getContext('2d'), xr=cvRes.getContext('2d');
+  for(const x of [xi,xm,xr]) x.setTransform(dpr,0,0,dpr,0,0);
+  xi.clearRect(0,0,viewW,viewH); xm.clearRect(0,0,viewW,viewH); xr.clearRect(0,0,viewW,viewH);
+  xi.drawImage(cur.bitmap,0,0,viewW,viewH);
+  if(cur.result){
+    xr.drawImage(canvasFrom(cur),0,0,viewW,viewH);
+    if(edMode==='compare'){
+      cvRes.style.clipPath='inset(0 0 0 '+(100-Number($('cmpRange').value))+'%)';
+      cvRes.style.display=''; 
+    } else { cvRes.style.display='none'; }
+  } else { cvRes.style.display='none'; }
+  cvMask.style.display=edMode==='edit'?'':'none';
+  if(edMode==='edit') drawMaskView(xm,null);
+}
+function drawMaskView(xm,tempOp){
+  xm.clearRect(0,0,viewW,viewH);
+  const ops=tempOp?cur.ops.concat([tempOp]):cur.ops;
+  for(const op of ops){
+    if(op.t==='r'){ xm.fillStyle='rgba(255,59,92,.5)'; xm.fillRect(op.x*viewW,op.y*viewH,op.w*viewW,op.h*viewH); continue; }
+    xm.globalCompositeOperation=op.t==='e'?'destination-out':'source-over';
+    xm.strokeStyle=op.t==='e'?'rgba(0,0,0,1)':'rgba(255,59,92,.55)';
+    xm.lineWidth=Math.max(1.5,op.size*Math.min(viewW,viewH));
+    xm.lineCap='round'; xm.lineJoin='round';
+    const pts=op.pts;
+    xm.beginPath();
+    if(pts.length===2){ xm.arc(pts[0]*viewW,pts[1]*viewH,xm.lineWidth/2,0,7); xm.fillStyle=xm.strokeStyle; xm.fill(); continue; }
+    xm.moveTo(pts[0]*viewW,pts[1]*viewH);
+    for(let i=2;i<pts.length;i+=2)xm.lineTo(pts[i]*viewW,pts[i+1]*viewH);
+    xm.stroke();
+  }
+  xm.globalCompositeOperation='source-over';
+}
+let tool='b', drawing=false, drawPts=null, rectStart=null, tempOp=null;
+function setTool(tl){
+  tool=tl;
+  for(const [id,v] of [['tBrush','b'],['tEraser','e'],['tRect','r']])
+    $(id).classList.toggle('on',v===tl);
+}
+$('tBrush').addEventListener('click',()=>setTool('b'));
+$('tEraser').addEventListener('click',()=>setTool('e'));
+$('tRect').addEventListener('click',()=>setTool('r'));
+function evPos(e){
+  const r=cvMask.getBoundingClientRect();
+  return [Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))];
+}
+cvMask.addEventListener('pointerdown',e=>{
+  if(!cur||edMode!=='edit')return;
+  cvMask.setPointerCapture(e.pointerId);
+  const [nx,ny]=evPos(e);
+  if(tool==='r'){ rectStart=[nx,ny]; tempOp={t:'r',x:nx,y:ny,w:0,h:0}; }
+  else { drawing=true; drawPts=[nx,ny]; tempOp={t:tool,size:Number($('edSize').value)/1000,pts:drawPts.slice()}; }
+  drawEd();
+});
+cvMask.addEventListener('pointermove',e=>{
+  if(!cur||edMode!=='edit')return;
+  if(tool==='r'&&rectStart){
+    const [nx,ny]=evPos(e);
+    tempOp={t:'r',x:Math.min(rectStart[0],nx),y:Math.min(rectStart[1],ny),w:Math.abs(nx-rectStart[0]),h:Math.abs(ny-rectStart[1])};
+    drawEd();
+  } else if(drawing){
+    const [nx,ny]=evPos(e);
+    const L=drawPts.length;
+    if(Math.abs(nx-drawPts[L-2])>0.0012||Math.abs(ny-drawPts[L-1])>0.0012){
+      drawPts.push(nx,ny); tempOp.pts=drawPts.slice(); drawEd();
+    }
+  }
+});
+function endDraw(){
+  if(!cur)return;
+  if(tempOp){
+    const ok=tempOp.t==='r'?(tempOp.w>0.004&&tempOp.h>0.004):true;
+    if(ok){ cur.ops.push(tempOp); invalidateResult(cur); }
+  }
+  tempOp=null; drawing=false; rectStart=null;
+  drawEd();
+}
+cvMask.addEventListener('pointerup',endDraw);
+cvMask.addEventListener('pointercancel',endDraw);
+function invalidateResult(im){ if(im.result){ im.result=null; im.status=im.ops.length?'masked':'ready'; im.ms=0; if(cur===im&&$('edCmp'))$('edCmp').style.display='none'; } if(edMode==='compare'){ edMode='edit'; $('cmpRow').classList.remove('on'); } }
+$('edSize').addEventListener('input',()=>{});
+$('edUndo').addEventListener('click',()=>{ if(cur&&cur.ops.length){ cur.ops.pop(); invalidateResult(cur); drawEd(); } });
+$('edClear').addEventListener('click',()=>{ if(cur&&cur.ops.length){ cur.ops=[]; invalidateResult(cur); drawEd(); } });
+$('edBack').addEventListener('click',closeEditor);
+$('edClose').addEventListener('click',closeEditor);
+$('edApplyAll').addEventListener('click',()=>{
+  if(!cur||!cur.ops.length){ toast(t('toastNone')); return; }
+  const copy=JSON.parse(JSON.stringify(cur.ops)); let n=0;
+  for(const im of imgs){ if(im!==cur){ im.ops=JSON.parse(JSON.stringify(copy)); invalidateResult(im); renderCard(im); n++; } }
+  toast(fmt('toastApplied',{n}));
+});
+$('edRun').addEventListener('click',()=>{ if(cur){ const im=cur; im.result=null; im.status='processing'; renderCard(im); queue.push(im); if(!batchStart)batchStart=Date.now(); batchTotal++; updProg(); pump(); } });
+$('edCmp').addEventListener('click',()=>{
+  if(!cur||!cur.result)return;
+  edMode=edMode==='compare'?'edit':'compare';
+  $('cmpRow').classList.toggle('on',edMode==='compare');
+  if(edMode==='compare')$('cmpRange').value=100;
+  drawEd();
+});
+$('cmpRange').addEventListener('input',drawEd);
+window.addEventListener('keydown',e=>{
+  if(!$('editor').classList.contains('on'))return;
+  if(e.key==='Escape')closeEditor();
+  else if((e.ctrlKey||e.metaKey)&&e.key==='z'){ e.preventDefault(); $('edUndo').click(); }
+  else if(e.key==='b'||e.key==='B')setTool('b');
+  else if(e.key==='e'||e.key==='E')setTool('e');
+  else if(e.key==='r'||e.key==='R')setTool('r');
+});
+window.addEventListener('resize',()=>{ if($('editor').classList.contains('on'))layoutEd(); });
+
+/* ================= processing ================= */
+function getBytes(im){
+  const c=document.createElement('canvas'); c.width=im.w; c.height=im.h;
+  const x=c.getContext('2d',{willReadFrequently:true});
+  x.drawImage(im.bitmap,0,0);
+  return x.getImageData(0,0,im.w,im.h).data;
+}
+function processAll(){
+  const targets=imgs.filter(im=>im.status!=='failed'&&im.bitmap&&im.ops.length);
+  if(!targets.length){ toast(t('toastNone')); return; }
+  const skipped=imgs.filter(im=>im.bitmap&&im.status!=='failed'&&!im.ops.length).length;
+  batchStart=Date.now(); batchTotal=targets.length; batchDone=0;
+  for(const im of targets){ im.result=null; im.status='processing'; renderCard(im); queue.push(im); }
+  updProg(); pump();
+  if(skipped)toast(fmt('toastSkipped',{n:skipped}));
+}
+function pump(){
+  while(running<state.conc&&queue.length){
+    const im=queue.shift();
+    running++;
+    runJob(im).catch(err=>{ im.status='failed'; im.err=String(err); renderCard(im); })
+      .finally(()=>{ running--; batchDone++; updProg(); if(!queue.length&&!running)batchEnd(); pump(); });
+  }
+}
+function batchEnd(){
+  const sec=((Date.now()-batchStart)/1000).toFixed(1);
+  const done=imgs.filter(i=>i.status==='done').length;
+  const fail=imgs.filter(i=>i.status==='failed').length;
+  toast(fmt('toastDone',{n:done,s:sec}));
+  if(fail)toast(fmt('toastFail',{n:fail}),3600);
+  batchStart=0;
+}
+function runJob(im){
+  return new Promise((resolve,reject)=>{
+    const wk=getWorker();
+    if(!wk){ setTimeout(()=>{ running--; queue.unshift(im); pump(); },120); resolve(); return; }
+    wk.busy=true;
+    let rgba,mask;
+    try{ rgba=getBytes(im); mask=rasterizeMask(im); }
+    catch(e){ wk.busy=false; reject(e); return; }
+    const id=++jobSeq;
+    jobs.set(id,im);
+    wk.w.onmessage=e=>{
+      wk.busy=false;
+      const m=e.data, im2=jobs.get(m.id); jobs.delete(m.id);
+      if(!im2){ resolve(); return; }
+      if(m.type==='done'){ im2.result=new Uint8ClampedArray(m.rgba); im2.ms=m.ms; im2.status='done'; }
+      else { im2.status='failed'; im2.err=m.msg||'engine'; }
+      renderCard(im2);
+      if(cur===im2&&$('editor').classList.contains('on')&&im2.status==='done'){
+        edMode='compare'; $('cmpRange').value=100; $('cmpRow').classList.add('on'); $('edCmp').style.display=''; drawEd();
+      }
+      resolve();
+    };
+    wk.w.onerror=e=>{
+      wk.busy=false; const im2=jobs.get(id); jobs.delete(id);
+      if(im2){ im2.status='failed'; im2.err='worker'; renderCard(im2); }
+      resolve();
+    };
+    wk.w.postMessage({id,rgba:rgba.buffer,mask:mask.buffer,w:im.w,h:im.h,method:state.method},[rgba.buffer,mask.buffer]);
+  });
+}
+function updProg(){
+  const active=running>0||queue.length>0;
+  $('prog').classList.toggle('on',active);
+  if(!active)return;
+  const doneN=imgs.filter(i=>i.status==='done').length;
+  const total=Math.max(batchTotal,doneN+queue.length+running);
+  $('progBar').style.width=(total?Math.round(100*doneN/total):0)+'%';
+  $('progTxt').textContent=fmt('progTxt',{d:doneN,t:total,r:running});
+}
+$('btnRun').addEventListener('click',processAll);
+
+/* ================= download ================= */
+function downloadOne(im){
+  if(!im.result)return;
+  canvasFrom(im).toBlob(b=>{ if(b)saveBlob(b,outName(im)); },outMime(im),state.quality);
+}
+$('btnZip').addEventListener('click',async()=>{
+  const done=imgs.filter(im=>im.result);
+  if(!done.length){ toast(t('toastZipNone')); return; }
+  const btn=$('btnZip'); const old=btn.textContent;
+  btn.disabled=true; btn.textContent=t('zipBusy');
+  try{
+    const files=[];
+    for(const im of done){
+      const blob=await new Promise(r=>canvasFrom(im).toBlob(r,outMime(im),state.quality));
+      if(blob)files.push({name:outName(im),data:new Uint8Array(await blob.arrayBuffer())});
+    }
+    saveBlob(makeZip(files),'markgone-'+files.length+'.zip');
+    toast(fmt('toastZipReady',{n:files.length}));
+  } finally { btn.disabled=false; btn.textContent=old; }
+});
+$('btnClear').addEventListener('click',()=>{
+  if(!imgs.length)return;
+  if(!confirm(fmt('confirmClear',{n:imgs.length})))return;
+  imgs.length=0; queue.length=0;
+  $('controls').hidden=true; $('stNone').style.display='';
+  renderGrid(); toast(t('toastCleared'));
+});
+
+/* ---- store-only ZIP writer (images are already compressed) ---- */
+const CRC_T=(()=>{const tb=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);tb[n]=c>>>0;}return tb;})();
+function crc32(u8){ let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++)c=CRC_T[(c^u8[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function makeZip(files){
+  const enc=new TextEncoder(), parts=[], central=[]; let offset=0;
+  const d=new Date();
+  const dtime=((d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1))&0xFFFF;
+  const ddate=(((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate())&0xFFFF;
+  for(const f of files){
+    const nb=enc.encode(f.name), crc=crc32(f.data), sz=f.data.length;
+    const lh=new DataView(new ArrayBuffer(30));
+    lh.setUint32(0,0x04034b50,true); lh.setUint16(4,20,true); lh.setUint16(6,0x0800,true); lh.setUint16(8,0,true);
+    lh.setUint16(10,dtime,true); lh.setUint16(12,ddate,true);
+    lh.setUint32(14,crc,true); lh.setUint32(18,sz,true); lh.setUint32(22,sz,true);
+    lh.setUint16(26,nb.length,true); lh.setUint16(28,0,true);
+    parts.push(new Uint8Array(lh.buffer),nb,f.data);
+    central.push({nb,crc,sz,off:offset});
+    offset+=30+nb.length+sz;
+  }
+  const cdStart=offset; let cdSize=0;
+  for(const c of central){
+    const ch=new DataView(new ArrayBuffer(46));
+    ch.setUint32(0,0x02014b50,true); ch.setUint16(4,20,true); ch.setUint16(6,20,true); ch.setUint16(8,0x0800,true); ch.setUint16(10,0,true);
+    ch.setUint16(12,dtime,true); ch.setUint16(14,ddate,true);
+    ch.setUint32(16,c.crc,true); ch.setUint32(20,c.sz,true); ch.setUint32(24,c.sz,true);
+    ch.setUint16(28,c.nb.length,true); ch.setUint32(42,c.off,true);
+    parts.push(new Uint8Array(ch.buffer),c.nb);
+    cdSize+=46+c.nb.length;
+  }
+  const eo=new DataView(new ArrayBuffer(22));
+  eo.setUint32(0,0x06054b50,true);
+  eo.setUint16(8,central.length,true); eo.setUint16(10,central.length,true);
+  eo.setUint32(12,cdSize,true); eo.setUint32(16,cdStart,true);
+  parts.push(new Uint8Array(eo.buffer));
+  return new Blob(parts);
+}
+
+/* ================= controls wiring ================= */
+$('selQ').addEventListener('change',e=>state.method=Number(e.target.value));
+$('selF').addEventListener('change',e=>state.mime=e.target.value);
+$('rgQ').addEventListener('input',e=>{ state.quality=Number(e.target.value)/100; $('qVal').textContent=e.target.value; });
+$('rgC').addEventListener('input',e=>{
+  state.conc=Number(e.target.value);
+  $('cVal').textContent=state.conc;
+  const hc=navigator.hardwareConcurrency||4;
+  $('cHint').textContent=state.conc>hc?' '+t('hintConc'):'';
+});
+{ $('rgC').value=state.conc; $('cVal').textContent=state.conc; }
+
+/* ================= inputs: file / drop / paste / demo ================= */
+$('dropZone').addEventListener('click',e=>{ if(e.target.tagName!=='BUTTON')$('fileIn').click(); });
+$('fileIn').addEventListener('change',e=>{ addFiles(e.target.files); e.target.value=''; });
+const dz=$('dropZone');
+['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{ e.preventDefault(); dz.classList.add('over'); }));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{ e.preventDefault(); dz.classList.remove('over'); }));
+dz.addEventListener('drop',e=>{ if(e.dataTransfer&&e.dataTransfer.files.length)addFiles(e.dataTransfer.files); });
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',e=>e.preventDefault());
+document.addEventListener('paste',e=>{
+  const items=e.clipboardData&&e.clipboardData.items;
+  if(!items)return;
+  const files=[];
+  for(const it of items){ if(it.kind==='file'&&it.type.startsWith('image/')){ const f=it.getAsFile(); if(f)files.push(f); } }
+  if(files.length){ e.preventDefault(); addFiles(files); toast('📎 +'+files.length); }
+});
+
+/* ---- demo images (drawn locally, so the tool can be tried with one click) ---- */
+function makeDemo(name,draw){
+  const c=document.createElement('canvas');
+  draw(c.getContext('2d'),c.width,c.height);
+  return new Promise(res=>c.toBlob(b=>res(new File([b],name,{type:'image/jpeg'})),'image/jpeg',0.92));
+}
+async function addDemos(){
+  const mk=(w,h,fn)=>{ const c=document.createElement('canvas'); c.width=w; c.height=h; fn(c.getContext('2d'),w,h); return c; };
+  const c1=mk(1280,800,(x,w,h)=>{
+    const sky=x.createLinearGradient(0,0,0,h*0.62);
+    sky.addColorStop(0,'#274B73'); sky.addColorStop(.6,'#7FB2D6'); sky.addColorStop(1,'#D9E8F2');
+    x.fillStyle=sky; x.fillRect(0,0,w,h*0.62);
+    x.fillStyle='rgba(255,244,214,.9)'; x.beginPath(); x.arc(w*0.72,h*0.3,46,0,7); x.fill();
+    x.fillStyle='rgba(255,244,214,.25)'; x.beginPath(); x.arc(w*0.72,h*0.3,90,0,7); x.fill();
+    const mts=[[.55,'#2E4A63'],[.42,'#3D6280'],[.3,'#547C99']];
+    mts.forEach(([hh,col],li)=>{
+      x.fillStyle=col; x.beginPath(); x.moveTo(0,h*0.62);
+      for(let px=0;px<=w;px+=8){
+        const yy=h*(0.62-hh*0.36*(0.55+0.45*Math.sin(px*0.004+li*2.1))-hh*0.18*Math.sin(px*0.013+li));
+        x.lineTo(px,yy);
+      }
+      x.lineTo(w,h*0.62); x.closePath(); x.fill();
+    });
+    const sea=x.createLinearGradient(0,h*0.62,0,h);
+    sea.addColorStop(0,'#33607F'); sea.addColorStop(1,'#1E3D55');
+    x.fillStyle=sea; x.fillRect(0,h*0.62,w,h*0.38);
+    x.strokeStyle='rgba(255,255,255,.12)';
+    for(let i=0;i<40;i++){ const yy=h*0.64+i*h*0.009; x.beginPath(); x.moveTo(Math.random()*w,yy); x.lineTo(Math.random()*w*0.3+Math.random()*w,yy+1); x.stroke(); }
+    x.save(); x.translate(w*0.5,h*0.45); x.rotate(-0.32);
+    x.font='700 74px -apple-system,Arial,sans-serif'; x.textAlign='center';
+    x.fillStyle='rgba(255,255,255,.55)'; x.fillText('STOCK PHOTO © 2026',0,0); x.restore();
+    x.font='600 30px -apple-system,Arial,sans-serif'; x.textAlign='right';
+    x.fillStyle='rgba(255,255,255,.7)'; x.fillText('watermark.co',w-24,h-24);
+  });
+  const c2=mk(1100,1100,(x,w,h)=>{
+    const bg=x.createLinearGradient(0,0,w,h);
+    bg.addColorStop(0,'#F2EFE9'); bg.addColorStop(1,'#DCD6CC');
+    x.fillStyle=bg; x.fillRect(0,0,w,h);
+    x.fillStyle='rgba(0,0,0,.10)'; x.beginPath(); x.ellipse(w*0.5,h*0.68,w*0.27,h*0.045,0,0,7); x.fill();
+    const bx=w*0.34,by=h*0.3,bw=w*0.32,bh2=h*0.37;
+    const pg=x.createLinearGradient(bx,by,bx+bw,by+bh2);
+    pg.addColorStop(0,'#8FB8A8'); pg.addColorStop(1,'#5D8F7C');
+    x.fillStyle=pg; x.beginPath(); x.roundRect(bx,by,bw,bh2,26); x.fill();
+    x.fillStyle='rgba(255,255,255,.55)'; x.beginPath(); x.roundRect(bx+22,by+22,bw-44,bh2*0.34,14); x.fill();
+    x.fillStyle='rgba(255,255,255,.35)'; x.beginPath(); x.roundRect(bx+22,by+bh2*0.46,bw-44,16,8); x.fill();
+    x.beginPath(); x.roundRect(bx+22,by+bh2*0.56,bw*0.6,16,8); x.fill();
+    x.fillStyle='rgba(178,64,47,.82)'; x.beginPath(); x.roundRect(26,26,168,54,12); x.fill();
+    x.fillStyle='#fff'; x.font='700 28px -apple-system,Arial,sans-serif'; x.textAlign='left'; x.fillText('BRAND™',44,62);
+    x.font='600 32px -apple-system,Arial,sans-serif'; x.textAlign='center';
+    x.fillStyle='rgba(40,36,30,.5)'; x.fillText('© ExampleMedia 2026 · licensed',w*0.5,h-36);
+  });
+  const f1=await new Promise(res=>c1.toBlob(b=>res(new File([b],'demo-landscape.jpg',{type:'image/jpeg'})),'image/jpeg',0.92));
+  const f2=await new Promise(res=>c2.toBlob(b=>res(new File([b],'demo-product.jpg',{type:'image/jpeg'})),'image/jpeg',0.92));
+  await addFiles([f1,f2]);
+  toast('🎲 2 × '+t('demoBtn').replace('🎲 ','').replace('Try with demo images','demo').trim());
+}
+$('demoBtn').addEventListener('click',e=>{ e.stopPropagation(); addDemos(); });
+
+/* ================= debug handle ================= */
+window.__MG={state,imgs,rasterizeMask,processAll,makeZip,crc32,addFiles,applyLang,setLang:applyLang};
+
+renderGrid();
+</script>
+</body>
+</html>
