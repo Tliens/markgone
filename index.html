@@ -100,6 +100,12 @@ h1{font-size:clamp(26px,4.6vw,40px);line-height:1.2;margin:0 0 12px;letter-spaci
 .mbox li{padding:5px 0;font-size:13.5px}
 .mrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .mrow a{text-decoration:none}
+.acts .btn{display:inline-flex;align-items:center;justify-content:center;padding:6px 0}
+.ic{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ed-bar label b{font-size:12px;color:var(--text);min-width:44px;text-align:right;font-weight:600}
+#brushRing{position:absolute;border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.55),inset 0 0 0 1px rgba(0,0,0,.55);border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);display:none;z-index:6}
+#brushRing.eraser{border-style:dashed}
+#sizeTip{position:absolute;background:rgba(10,14,26,.85);color:#fff;font-size:11.5px;padding:2px 8px;border-radius:6px;pointer-events:none;display:none;white-space:nowrap;z-index:6}
 @keyframes mgPulse{0%,100%{box-shadow:0 0 0 0 rgba(134,134,240,.45)}50%{box-shadow:0 0 0 10px rgba(134,134,240,0)}}
 .pulse{animation:mgPulse 1.6s infinite}
 #dropZone{margin:26px 0 14px;border:2px dashed var(--line);border-radius:16px;background:var(--panel);padding:38px 20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
@@ -299,7 +305,7 @@ footer .code{margin-top:8px;font-size:12.5px;opacity:.85}
     <button class="tool on" id="tBrush" data-i18n-tt="ttBrush" title="Brush">🖌️ <span data-i18n="tBrush">Brush</span></button>
     <button class="tool" id="tEraser" data-i18n-tt="ttEraser" title="Eraser">🧽 <span data-i18n="tEraser">Eraser</span></button>
     <button class="tool" id="tRect" data-i18n-tt="ttRect" title="Rectangle">▭ <span data-i18n="tRect">Rect</span></button>
-    <label><span data-i18n="edSize">Size</span> <input type="range" id="edSize" min="4" max="160" value="30"></label>
+    <label><span data-i18n="edSize">Size</span> <input type="range" id="edSize" min="4" max="160" value="30"><b id="edSizeVal">30</b></label>
     <button class="tool" id="edUndo" data-i18n="edUndo">↶ Undo</button>
     <button class="tool" id="edClear" data-i18n="edClear">Clear</button>
     <button class="tool" id="edApplyAll" data-i18n="edApplyAll">Apply to all</button>
@@ -313,6 +319,8 @@ footer .code{margin-top:8px;font-size:12.5px;opacity:.85}
       <canvas id="cvImg"></canvas>
       <canvas id="cvRes"></canvas>
       <canvas id="cvMask"></canvas>
+      <div id="brushRing"></div>
+      <div id="sizeTip"></div>
     </div>
   </div>
   <div id="cmpRow"><span data-i18n="cmpOrig">◀ Original</span><input type="range" id="cmpRange" min="0" max="100" value="100"><span data-i18n="cmpResult">Result ▶</span></div>
@@ -672,6 +680,7 @@ en:{
   psD:'PicSqueeze is our free image compressor — same privacy model as MarkGone: everything runs in your browser, nothing gets uploaded.',
   ps1:'🎯 Hit a target file size (KB)', ps2:'🔄 Convert between JPEG / PNG / WebP', ps3:'📚 Batch compression, one-click download',
   psGo:'🗜️ Open PicSqueeze', psNo:'Not now', ttX:'Follow on X (@kuige_me)',
+  actEdit:'Edit mask', actDl:'Download result', actDel:'Remove',
   ttTheme:'Theme: auto / light / dark', ttBrush:'Brush (B)', ttEraser:'Eraser (E)', ttRect:'Rectangle (R)',
   edBack:'Grid', tBrush:'Brush', tEraser:'Eraser', tRect:'Rect', edSize:'Size',
   edUndo:'↶ Undo', edClear:'Clear', edApplyAll:'Apply to all', edRun1:'▶ Process this', edCmp:'Compare',
@@ -730,6 +739,7 @@ zh:{
   psD:'PicSqueeze 是我们的免费图片压缩工具 —— 与 MarkGone 同样的隐私模型：全程浏览器本地处理，图片不上传。',
   ps1:'🎯 按目标体积压缩（KB）', ps2:'🔄 JPEG / PNG / WebP 格式互转', ps3:'📚 批量压缩，一键打包下载',
   psGo:'🗜️ 打开 PicSqueeze', psNo:'暂时不用', ttX:'我的 X 主页（@kuige_me）',
+  actEdit:'标记', actDl:'下载', actDel:'删除',
   ttTheme:'主题：自动 / 亮 / 暗', ttBrush:'画笔（B）', ttEraser:'橡皮（E）', ttRect:'矩形（R）',
   edBack:'返回列表', tBrush:'画笔', tEraser:'橡皮', tRect:'矩形', edSize:'大小',
   edUndo:'↶ 撤销', edClear:'清除蒙版', edApplyAll:'应用到全部', edRun1:'▶ 处理这张', edCmp:'对比',
@@ -886,7 +896,11 @@ function renderGrid(){
       const el=document.createElement('div'); el.className='card';
       el.innerHTML='<div class="thumb"><canvas width="360" height="240"></canvas><span class="badge"></span></div>'
         +'<div class="meta"><span class="nm"></span><span class="dm"></span></div>'
-        +'<div class="acts"><button class="btn bEdit">✏️</button><button class="btn bDl">⬇️</button><button class="btn bDel">🗑</button></div>';
+        +'<div class="acts">'
+        +'<button class="btn bEdit" data-i18n-tt="actEdit"><svg class="ic" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'
+        +'<button class="btn bDl" data-i18n-tt="actDl"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
+        +'<button class="btn bDel" data-i18n-tt="actDel"><svg class="ic" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>'
+        +'</div>';
       el._im=im;
       el.querySelector('.thumb').addEventListener('click',()=>openEditor(im));
       el.querySelector('.bEdit').addEventListener('click',()=>openEditor(im));
@@ -894,6 +908,9 @@ function renderGrid(){
       el.querySelector('.bDel').addEventListener('click',()=>removeImg(im));
       im.el=el; im.cv=el.querySelector('canvas'); im.badge=el.querySelector('.badge');
       im.nmEl=el.querySelector('.nm'); im.dmEl=el.querySelector('.dm'); im.dlBtn=el.querySelector('.bDl');
+      el.querySelector('.bEdit').title=t('actEdit');
+      el.querySelector('.bDl').title=t('actDl');
+      el.querySelector('.bDel').title=t('actDel');
       g.appendChild(el);
     }
     renderCard(im);
@@ -938,10 +955,16 @@ function openEditor(im){
   $('cmpRow').classList.remove('on');
   $('edName').textContent=im.name; $('edName').title=im.name;
   setTool(tool);
+  updSizeVal();
   $('edCmp').style.display=im.result?'':'none';
   layoutEd();
 }
-function closeEditor(){ $('editor').classList.remove('on'); cur=null; renderGrid(); }
+function closeEditor(){ $('editor').classList.remove('on'); cur=null; $('brushRing').style.display='none'; $('sizeTip').style.display='none'; renderGrid(); }
+function updSizeVal(){
+  const v=Number($('edSize').value);
+  const px=cur?Math.round(v/1000*Math.min(cur.w,cur.h)):null;
+  $('edSizeVal').textContent=px?v+' \u00b7 '+px+' px':String(v);
+}
 function layoutEd(){
   if(!cur)return;
   const st=$('edStage');
@@ -1015,15 +1038,37 @@ cvMask.addEventListener('pointerdown',e=>{
   if(!cur||edMode!=='edit')return;
   try{cvMask.setPointerCapture(e.pointerId);}catch(_){}
   const [nx,ny]=evPos(e);
-  if(tool==='r'){ rectStart=[nx,ny]; tempOp={t:'r',x:nx,y:ny,w:0,h:0}; }
-  else { drawing=true; drawPts=[nx,ny]; tempOp={t:tool,size:Number($('edSize').value)/1000,pts:drawPts.slice()}; }
+  if(tool==='r'){
+    rectStart=[nx,ny]; tempOp={t:'r',x:nx,y:ny,w:0,h:0};
+    $('brushRing').style.display='none';
+    const rc=cvMask.getBoundingClientRect();
+    $('sizeTip').textContent='0 \u00d7 0 px'; $('sizeTip').style.display='block';
+    $('sizeTip').style.left=(e.clientX-rc.left+14)+'px'; $('sizeTip').style.top=(e.clientY-rc.top+14)+'px';
+  }
+  else { drawing=true; drawPts=[nx,ny]; tempOp={t:tool,size:Number($('edSize').value)/1000,pts:drawPts.slice()}; updRing(e); }
   drawEd();
 });
+const ringEl=$('brushRing'), tipEl=$('sizeTip');
+function updRing(e){
+  if(!cur||edMode!=='edit'||e.pointerType==='touch'){ ringEl.style.display='none'; return; }
+  if(tool==='r'){ ringEl.style.display='none'; return; }
+  const r=cvMask.getBoundingClientRect();
+  const d=Math.max(4,Number($('edSize').value)/1000*Math.min(viewW,viewH));
+  ringEl.style.width=d+'px'; ringEl.style.height=d+'px';
+  ringEl.style.left=(e.clientX-r.left)+'px'; ringEl.style.top=(e.clientY-r.top)+'px';
+  ringEl.className=tool==='e'?'eraser':'';
+  ringEl.style.display='block';
+}
 cvMask.addEventListener('pointermove',e=>{
-  if(!cur||edMode!=='edit')return;
+  if(!cur||edMode!=='edit'){ ringEl.style.display='none'; tipEl.style.display='none'; return; }
+  updRing(e);
   if(tool==='r'&&rectStart){
     const [nx,ny]=evPos(e);
     tempOp={t:'r',x:Math.min(rectStart[0],nx),y:Math.min(rectStart[1],ny),w:Math.abs(nx-rectStart[0]),h:Math.abs(ny-rectStart[1])};
+    const r=cvMask.getBoundingClientRect();
+    tipEl.textContent=Math.round(tempOp.w*cur.w)+' \u00d7 '+Math.round(tempOp.h*cur.h)+' px';
+    tipEl.style.display='block';
+    tipEl.style.left=(e.clientX-r.left+14)+'px'; tipEl.style.top=(e.clientY-r.top+14)+'px';
     drawEd();
   } else if(drawing){
     const [nx,ny]=evPos(e);
@@ -1039,13 +1084,14 @@ function endDraw(){
     const ok=tempOp.t==='r'?(tempOp.w>0.004&&tempOp.h>0.004):true;
     if(ok){ cur.ops.push(tempOp); invalidateResult(cur); }
   }
-  tempOp=null; drawing=false; rectStart=null;
+  tempOp=null; drawing=false; rectStart=null; tipEl.style.display='none';
   drawEd();
 }
 cvMask.addEventListener('pointerup',endDraw);
 cvMask.addEventListener('pointercancel',endDraw);
+cvMask.addEventListener('pointerleave',()=>{ ringEl.style.display='none'; tipEl.style.display='none'; });
 function invalidateResult(im){ if(im.result){ im.result=null; im.status=im.ops.length?'masked':'ready'; im.ms=0; if(cur===im&&$('edCmp'))$('edCmp').style.display='none'; } if(edMode==='compare'){ edMode='edit'; $('cmpRow').classList.remove('on'); } updSteps(); }
-$('edSize').addEventListener('input',()=>{});
+$('edSize').addEventListener('input',updSizeVal);
 $('edUndo').addEventListener('click',()=>{ if(cur&&cur.ops.length){ cur.ops.pop(); invalidateResult(cur); drawEd(); } });
 $('edClear').addEventListener('click',()=>{ if(cur&&cur.ops.length){ cur.ops=[]; invalidateResult(cur); drawEd(); } });
 $('edBack').addEventListener('click',closeEditor);
@@ -1062,6 +1108,7 @@ $('edCmp').addEventListener('click',()=>{
   edMode=edMode==='compare'?'edit':'compare';
   $('cmpRow').classList.toggle('on',edMode==='compare');
   if(edMode==='compare')$('cmpRange').value=100;
+  ringEl.style.display='none'; tipEl.style.display='none';
   drawEd();
 });
 $('cmpRange').addEventListener('input',drawEd);
@@ -1106,7 +1153,6 @@ function batchEnd(){
   toast(fmt('toastDone',{n:done,s:sec}));
   if(fail)toast(fmt('toastFail',{n:fail}),3600);
   if(done>0)$('btnZip').classList.add('pulse');
-  if(done>0)setTimeout(openPs,900);
   updSteps();
   batchStart=0;
 }
@@ -1154,12 +1200,14 @@ $('btnRun').addEventListener('click',processAll);
 /* ================= download ================= */
 function downloadOne(im){
   if(!im.result)return;
+  psOnDownload();
   canvasFrom(im).toBlob(b=>{ if(b)saveBlob(b,outName(im)); },outMime(im),state.quality);
 }
 $('btnZip').addEventListener('click',async()=>{
   $('btnZip').classList.remove('pulse');
   const done=imgs.filter(im=>im.result);
   if(!done.length){ toast(t('toastZipNone')); return; }
+  psOnDownload();
   const btn=$('btnZip'); const old=btn.textContent;
   btn.disabled=true; btn.textContent=t('zipBusy');
   try{
@@ -1336,6 +1384,11 @@ function openPs(){ $('psModal').hidden=false; }
 $('psClose').addEventListener('click',()=>$('psModal').hidden=true);
 $('psNo').addEventListener('click',()=>$('psModal').hidden=true);
 $('psModal').addEventListener('click',e=>{ if(e.target.id==='psModal')$('psModal').hidden=true; });
+function psOnDownload(){
+  if(sessionStorage.mg_ps_seen)return;
+  sessionStorage.mg_ps_seen='1';
+  setTimeout(openPs,500);
+}
 $('nextBtn').addEventListener('click',()=>{
   if(nextAction==='open'){ const im=imgs.find(i=>i.bitmap); if(im)openEditor(im); }
   else if(nextAction==='run'){ processAll(); }
