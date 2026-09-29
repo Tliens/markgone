@@ -992,7 +992,7 @@ function drawEd(){
     } else { cvRes.style.display='none'; }
   } else { cvRes.style.display='none'; }
   cvMask.style.display=edMode==='edit'?'':'none';
-  if(edMode==='edit') drawMaskView(xm,null);
+  if(edMode==='edit') drawMaskView(xm,tempOp);
 }
 function drawMaskView(xm,tempOp){
   xm.clearRect(0,0,viewW,viewH);
